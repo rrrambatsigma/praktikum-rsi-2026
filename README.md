@@ -2,7 +2,7 @@
 
 Repository latihan (_hands-on_) pendamping situs materi **Praktikum Rekayasa Sistem Informasi**, FATISDA UNS. Setiap folder hands-on berisi kode referensi yang lengkap dan bisa langsung dijalankan.
 
-👉 praktikum-rsi.prayudahlah.dev
+👉 [praktikum-rsi.prayudahlah.dev](https://praktikum-rsi.prayudahlah.dev)
 
 ## Asisten Praktikum
 
