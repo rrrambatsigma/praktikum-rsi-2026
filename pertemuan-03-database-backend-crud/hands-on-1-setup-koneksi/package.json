@@ -1,0 +1,24 @@
+{
+  "name": "hands-on-1-setup-koneksi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hands-on 1 Pertemuan 03 - setup database dan koneksi SQL Server dari backend",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mssql": "^12.7.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/mssql": "^12.3.0",
+    "@types/node": "^26.5.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}
