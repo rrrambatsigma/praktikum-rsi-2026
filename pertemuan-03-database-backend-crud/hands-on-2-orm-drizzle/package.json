@@ -1,0 +1,26 @@
+{
+  "name": "hands-on-2-orm-drizzle",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hands-on 2 Pertemuan 03 - akses database dengan Drizzle ORM",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^1.0.0-rc.5-5935859",
+    "express": "^5.2.1",
+    "mssql": "^11.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/mssql": "^9.1.11",
+    "@types/node": "^26.5.1",
+    "drizzle-kit": "^1.0.0-rc.5-5935859",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}
