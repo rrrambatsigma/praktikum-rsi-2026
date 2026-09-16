@@ -5,3 +5,9 @@ dist/
 !.env.example
 *.log
 .DS_Store
+
+# Editor / IDE
+.vs/
+.vscode/
+.idea/
+*.user

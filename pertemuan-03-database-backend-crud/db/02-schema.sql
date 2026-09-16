@@ -1,9 +1,3 @@
-/* =====================================================================
-   02-schema.sql
-   Skema database "Review Kantin Kampus" (Pertemuan 03).
-   ERD -> T-SQL. Jalankan di database review_kantin.
-   ===================================================================== */
-
 USE review_kantin;
 GO
 

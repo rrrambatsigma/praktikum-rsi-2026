@@ -18,8 +18,8 @@ tetap memakai arsitektur berlapis (Repository → Service → Controller → Rou
 - SQL Server aktif + database sudah disiapkan:
 
 ```powershell
-sqlcmd -S localhost -E -C -i ..\db\00-setup-sql-auth.sql       # sekali saja
-sqlcmd -S localhost -E -C -i ..\db\01-create-database.sql
+sqlcmd -S localhost -E -C -i ..\db\00-setup-mixed-mode.sql       # sekali saja
+sqlcmd -S localhost -E -C -i ..\db\01-create-database-and-user.sql
 sqlcmd -S localhost -E -C -i ..\db\02-schema.sql
 sqlcmd -S localhost -E -C -i ..\db\03-seed.sql
 ```
@@ -30,8 +30,8 @@ sqlcmd -S localhost -E -C -i ..\db\03-seed.sql
 
 ```bash
 npm init -y
-npm install express mssql dotenv drizzle-orm@1.0.0-rc.5-5935859
-npm install -D typescript @types/express @types/mssql @types/node tsx drizzle-kit@1.0.0-rc.5-5935859
+npm install express mssql dotenv drizzle-orm@1.0.0-rc.5-5935859 swagger-ui-express swagger-jsdoc
+npm install -D typescript @types/express @types/mssql @types/node tsx drizzle-kit@1.0.0-rc.5-5935859 @types/swagger-ui-express @types/swagger-jsdoc
 ```
 
 > Versi `drizzle-orm`/`drizzle-kit` dipatok ke RC yang sudah diuji. Drizzle untuk MSSQL
@@ -235,6 +235,7 @@ npm run dev
 | Method | Endpoint | Hasil |
 | --- | --- | --- |
 | GET | `/health` | `200` koneksi DB OK |
+| GET | `/docs` | Swagger UI — endpoint dibaca dari anotasi `@openapi` |
 | GET | `/api/v1/stalls?search=&category=&page=&limit=` | `200` daftar + `meta {page,limit,total}` |
 | GET | `/api/v1/stalls/:id` | `200` detail, `404` bila tak ada |
 | GET | `/api/v1/stalls/:id/menus` | `200` daftar menu (join) |
@@ -247,6 +248,41 @@ Contoh:
 ```bash
 curl.exe "http://localhost:3000/api/v1/stalls?category=Minuman&limit=2&page=1"
 ```
+
+---
+
+## Dokumentasi API (Swagger UI)
+
+Dokumentasi dibangun dengan **`swagger-jsdoc`**: spec OpenAPI dirakit dari anotasi
+JSDoc `@openapi` di file route, lalu disajikan lewat **`swagger-ui-express`** di
+`http://localhost:3000/docs`.
+
+- `src/docs/openapi.ts` — konfigurasi `swagger-jsdoc` (info, `servers`, schema `StallInput`, glob `apis`).
+- `src/index.ts` — mount Swagger UI + anotasi `@openapi` untuk `GET /health`.
+- `src/routes/stallRouter.ts` — anotasi `@openapi` untuk tiap endpoint.
+
+Contoh anotasi di atas sebuah route:
+
+```ts
+/**
+ * @openapi
+ * /api/v1/stalls/{id}:
+ *   get:
+ *     tags: [Stalls]
+ *     summary: Detail warung
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Detail warung
+ */
+stallRouter.get('/:id', stallController.getStallById);
+```
+
+Buka `/docs`, lalu klik **Try it out** untuk mengirim request langsung ke server.
 
 ---
 
@@ -266,6 +302,7 @@ Bila terbiasa dengan contoh Drizzle (Postgres/MySQL), ada beberapa perbedaan:
 
 ```
 hands-on-2-orm-drizzle/
+├─ README.md
 ├─ .env.example
 ├─ drizzle.config.ts          # konfigurasi drizzle-kit (referensi)
 ├─ package.json  tsconfig.json
@@ -273,6 +310,7 @@ hands-on-2-orm-drizzle/
    ├─ db/
    │  ├─ schema.ts            # pemetaan tabel (manual)
    │  └─ index.ts            # koneksi Drizzle
+   ├─ docs/openapi.ts         # konfigurasi swagger-jsdoc
    ├─ dtos/stallDto.ts
    ├─ repositories/
    │  ├─ stallRepository.ts

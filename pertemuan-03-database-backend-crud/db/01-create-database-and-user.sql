@@ -1,10 +1,3 @@
-/* =====================================================================
-   01-create-database.sql
-   Tujuan   : membuat database aplikasi dan user khusus aplikasi.
-   Jalankan : di database "master", sebagai sysadmin (atau rsi_admin).
-   Prasyarat: jalankan 00-setup-sql-auth.sql + restart service lebih dulu.
-   ===================================================================== */
-
 USE master;
 GO
 

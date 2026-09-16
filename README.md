@@ -4,6 +4,21 @@ Repository latihan (_hands-on_) pendamping situs materi **Praktikum Rekayasa Sis
 
 👉 [praktikum-rsi.prayudahlah.dev](https://praktikum-rsi.prayudahlah.dev)
 
+## Daftar Hands-on
+
+### Pertemuan 03 — Database, Integrasi Backend & ORM
+
+| Hands-on | Deskripsi |
+| --- | --- |
+| [Hands-on 1 — Setup & Koneksi](pertemuan-03-database-backend-crud/hands-on-1-setup-koneksi) | Setup SQL Server + koneksi backend (driver `mssql`) |
+| [Hands-on 2 — ORM Drizzle](pertemuan-03-database-backend-crud/hands-on-2-orm-drizzle) | CRUD, filter, pagination, join via Drizzle ORM |
+
+## Persyaratan
+
+- Node.js **>= 22.18.0** dan npm
+- SQL Server aktif (default instance `localhost` atau named instance)
+- Tiap hands-on dijalankan dari foldernya sendiri: `npm install` lalu `npm run dev`
+
 ## Asisten Praktikum
 
 - **Prayuda Afifan Handoyo - L0224008**

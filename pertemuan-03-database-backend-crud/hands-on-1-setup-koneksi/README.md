@@ -17,18 +17,17 @@ database memakai driver **`mssql`**.
 
 ## Bagian A — Setup Database (sekali saja)
 
-### Langkah 1 — Aktifkan SQL Authentication & buat login admin
+### Langkah 1 — Aktifkan Mixed Mode
 
-Buka `../db/00-setup-sql-auth.sql`. Script ini:
+Buka `../db/00-setup-mixed-mode.sql`. Script ini:
 
 1. mengecek apakah instance masih **Windows-only**,
-2. mengaktifkan **mixed mode** (SQL Server + Windows Authentication),
-3. membuat login admin `rsi_admin`.
+2. mengaktifkan **mixed mode** (SQL Server + Windows Authentication).
 
 Jalankan sebagai sysadmin memakai Windows Authentication:
 
 ```powershell
-sqlcmd -S localhost -E -i ..\db\00-setup-sql-auth.sql
+sqlcmd -S localhost -E -i ..\db\00-setup-mixed-mode.sql
 ```
 
 > `-E` = koneksi Windows (trusted). Untuk named instance ganti server, mis. `-S .\SQLEXPRESS`.
@@ -41,8 +40,8 @@ Restart-Service -Name MSSQLSERVER          # default instance
 # Restart-Service -Name 'MSSQL$SQLEXPRESS' # named instance
 ```
 
-> Alternatif: `..\db\setup-database.ps1` menjalankan sekaligus aktifasi mixed mode,
-> aktifasi TCP/IP 1433, pembuatan DB/user, dan restart service (jalankan sebagai Administrator).
+> Pastikan juga **TCP/IP** aktif di port 1433 (driver `mssql` terhubung via TCP),
+> dan service SQL Server berjalan. Agar tidak mati setelah reboot, set StartType `Automatic`.
 
 Kalau `windows_only` sudah bernilai `0` (mixed mode sudah aktif), langkah registry bisa dilewati.
 Untuk named instance, cara paling aman mengaktifkan mixed mode adalah lewat SSMS:
@@ -50,11 +49,11 @@ Untuk named instance, cara paling aman mengaktifkan mixed mode adalah lewat SSMS
 
 ### Langkah 2 — Buat database & user aplikasi
 
-Buka `../db/01-create-database.sql`. Script ini membuat database `review_kantin`
+Buka `../db/01-create-database-and-user.sql`. Script ini membuat database `review_kantin`
 dan login/user `praktikum_user` dengan hak baca-tulis (`db_datareader`, `db_datawriter`).
 
 ```powershell
-sqlcmd -S localhost -E -i ..\db\01-create-database.sql
+sqlcmd -S localhost -E -i ..\db\01-create-database-and-user.sql
 ```
 
 Uji login aplikasi (bukti SQL Authentication bekerja):
@@ -221,7 +220,7 @@ Buka `http://localhost:3000/health` di browser. Hasil yang diharapkan:
 | --- | --- |
 | `Login failed for user 'praktikum_user'` | Mixed mode belum aktif / service belum direstart, atau password salah. Cek `SERVERPROPERTY('IsIntegratedSecurityOnly')` = 0. |
 | `Failed to connect ... ECONNREFUSED` / `Could not connect (sequence)` | Service tidak jalan, atau **TCP/IP belum aktif di port 1433**. Aktifkan lewat SQL Server Configuration Manager → *SQL Server Network Configuration → Protocols → TCP/IP → Enabled*, lalu restart service. |
-| `Login failed for user 'praktikum_user'` tapi DB sudah ada | Mixed mode belum benar-benar aktif — **service belum direstart** setelah `00-setup-sql-auth.sql`. |
+| `Login failed for user 'praktikum_user'` tapi DB sudah ada | Mixed mode belum benar-benar aktif — **service belum direstart** setelah `00-setup-mixed-mode.sql`. |
 | `self signed certificate` / error SSL | Set `DB_ENCRYPT=false` dan `DB_TRUST_SERVER_CERTIFICATE=true`. |
 | `Environment variable DB_USER belum diisi` | File `.env` belum dibuat atau belum diisi. |
 | `Cannot connect to localhost` (named instance) | Ganti `DB_SERVER=.\SQLEXPRESS` dan pastikan port statis/TCP aktif. |
@@ -230,6 +229,7 @@ Buka `http://localhost:3000/health` di browser. Hasil yang diharapkan:
 
 ```
 hands-on-1-setup-koneksi/
+├─ README.md
 ├─ .env.example
 ├─ package.json
 ├─ tsconfig.json

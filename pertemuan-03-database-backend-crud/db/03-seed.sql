@@ -1,10 +1,3 @@
-/* =====================================================================
-   03-seed.sql
-   Data awal (seed) untuk database review_kantin.
-   Idempotent: dilewati bila tabel sudah berisi data.
-   Jalankan setelah 02-schema.sql.
-   ===================================================================== */
-
 USE review_kantin;
 GO
 
@@ -13,16 +6,26 @@ IF NOT EXISTS (SELECT 1 FROM dbo.USERS)
 BEGIN
     SET IDENTITY_INSERT dbo.USERS ON;
     INSERT INTO dbo.USERS (id, name, email, password_hash, role) VALUES
-        (1, N'Admin Kantin', N'admin@kantin.test',    N'hash_admin',  N'admin'),
-        (2, N'Bu Tini',      N'tini@kantin.test',     N'hash_owner1', N'owner'),
-        (3, N'Pak Slamet',   N'slamet@kantin.test',   N'hash_owner2', N'owner'),
-        (4, N'Makmur',       N'makmur@kantin.test',   N'hash_owner3', N'owner'),
-        (5, N'Prayuda',      N'prayuda@student.test', N'hash_cust1',  N'customer'),
-        (6, N'Rexy',         N'rexy@student.test',    N'hash_cust2',  N'customer'),
-        (7, N'Rambat',       N'rambat@student.test',  N'hash_cust3',  N'customer'),
-        (8, N'Trisha',       N'trisha@student.test',  N'hash_cust4',  N'customer');
+        -- admin
+        (1,  N'Admin Kantin', N'admin@kantin.test',   N'hash_admin',  N'admin'),
+        -- owner (1 owner per warung)
+        (2,  N'Bu Tini',      N'tini@kantin.test',    N'hash_owner1', N'owner'),
+        (3,  N'Pak Slamet',   N'slamet@kantin.test',  N'hash_owner2', N'owner'),
+        (4,  N'Pak Makmur',   N'makmur@kantin.test',  N'hash_owner3', N'owner'),
+        (5,  N'Cak Nur',      N'caknur@kantin.test',  N'hash_owner4', N'owner'),
+        (6,  N'Bu Wati',      N'wati@kantin.test',    N'hash_owner5', N'owner'),
+        (7,  N'Mas Bayu',     N'bayu@kantin.test',    N'hash_owner6', N'owner'),
+        (8,  N'Mas Andre',    N'andre@kantin.test',   N'hash_owner7', N'owner'),
+        (9,  N'Bu Inah',      N'inah@kantin.test',    N'hash_owner8', N'owner'),
+        (10, N'Bu Sari',      N'sari@kantin.test',    N'hash_owner9', N'owner'),
+        (11, N'Pak Hasan',    N'hasan@kantin.test',   N'hash_owner10',N'owner'),
+        -- customer
+        (12, N'Bagas Pratama',N'bagas@student.test',  N'hash_cust1',  N'customer'),
+        (13, N'Sinta Maharani',N'sinta@student.test', N'hash_cust2',  N'customer'),
+        (14, N'Yoga Saputra', N'yoga@student.test',   N'hash_cust3',  N'customer'),
+        (15, N'Dewi Lestari', N'dewi@student.test',   N'hash_cust4',  N'customer');
     SET IDENTITY_INSERT dbo.USERS OFF;
-    DBCC CHECKIDENT ('dbo.USERS', RESEED, 8) WITH NO_INFOMSGS;
+    DBCC CHECKIDENT ('dbo.USERS', RESEED, 15) WITH NO_INFOMSGS;
     PRINT 'Seed USERS selesai.';
 END
 GO
@@ -32,16 +35,16 @@ IF NOT EXISTS (SELECT 1 FROM dbo.STALLS)
 BEGIN
     SET IDENTITY_INSERT dbo.STALLS ON;
     INSERT INTO dbo.STALLS (id, owner_id, name, category, location, description, avg_rating, review_count) VALUES
-        (1,  2, N'Kwetiau Goreng',                N'Nasi',    N'Kantin Alif FKIP',   N'Kwetiau goreng spesial',        4.50, 2),
-        (2,  2, N'Nasi Goreng Spesial',           N'Nasi',    N'Kantin Alif FKIP',   N'Nasi goreng dengan telur',      4.00, 1),
-        (3,  3, N'Bakso Pasca',                   N'Bakso',   N'Kantin Bakso Pasca', N'Bakso urat jumbo',              4.67, 3),
-        (4,  3, N'Mie Ayam Pak Slamet',           N'Mie',     N'Kantin Bakso Pasca', N'Mie ayam pangsit',              4.00, 1),
-        (5,  4, N'Es Teh Makmur',                 N'Minuman', N'Kantin FK',          N'Aneka es teh',                  4.50, 2),
-        (6,  4, N'Jus Buah Segar',                N'Minuman', N'Kantin FK',          N'Jus tanpa gula tambahan',       5.00, 1),
-        (7,  2, N'Paket Chicken Steak Hot Plate', N'Western', N'Kantin FK',          N'Steak ayam hot plate',          4.50, 2),
-        (8,  3, N'Sate Ayam Madura',              N'Sate',    N'Kantin FEB',         N'Sate ayam bumbu kacang',        4.00, 1),
-        (9,  4, N'Soto Ayam Lamongan',            N'Soto',    N'Kantin FEB',         N'Soto ayam kuah bening',         4.50, 2),
-        (10, 2, N'Nasi Uduk Betawi',              N'Nasi',    N'Kantin Alif FKIP',   N'Nasi uduk + lauk',              4.00, 1);
+        (1,  2,  N'Warung Bu Tini',    N'Kwetiau', N'Kantin FKIP',  N'Kedai kwetiau goreng & kuah',          4.50, 2),
+        (2,  9,  N'Dapur Bu Inah',     N'Nasi',    N'Kantin FKIP',  N'Nasi goreng dadakan',                  4.00, 1),
+        (3,  3,  N'Kedai Pak Slamet',  N'Bakso',   N'Kantin FK',    N'Bakso urat jumbo & beranak',           4.67, 3),
+        (4,  5,  N'Kedai Cak Nur',     N'Mie',     N'Kantin FK',    N'Mie ayam original & pangsit',          4.00, 1),
+        (5,  4,  N'Warung Makmur',     N'Minuman', N'Kantin FEB',   N'Aneka es teh',                         4.50, 2),
+        (6,  10, N'Kedai Segar',       N'Minuman', N'Kantin FEB',   N'Jus buah tanpa gula tambahan',         5.00, 1),
+        (7,  7,  N'Dapur Mas Bayu',    N'Western', N'Kantin FEB',   N'Chicken steak & katsu hot plate',      4.50, 2),
+        (8,  8,  N'Warung Mas Andre',  N'Sate',    N'Kantin FISIP', N'Sate ayam & kambing bumbu kacang',     4.00, 1),
+        (9,  6,  N'Warung Bu Wati',    N'Soto',    N'Kantin FISIP', N'Soto ayam kuah bening',                4.50, 2),
+        (10, 11, N'Dapur Pak Hasan',   N'Nasi',    N'Kantin FKIP',  N'Nasi uduk dengan aneka lauk',          4.00, 1);
     SET IDENTITY_INSERT dbo.STALLS OFF;
     DBCC CHECKIDENT ('dbo.STALLS', RESEED, 10) WITH NO_INFOMSGS;
     PRINT 'Seed STALLS selesai.';
@@ -84,22 +87,22 @@ IF NOT EXISTS (SELECT 1 FROM dbo.REVIEWS)
 BEGIN
     SET IDENTITY_INSERT dbo.REVIEWS ON;
     INSERT INTO dbo.REVIEWS (id, stall_id, user_id, rating, comment) VALUES
-        (1,  1,  5, 5, N'Enak!'),
-        (2,  1,  6, 4, N'Oke'),
-        (3,  2,  5, 4, N'Lumayan'),
-        (4,  3,  5, 5, N'Baksonya mantap'),
-        (5,  3,  6, 5, N'Jumbo!'),
-        (6,  3,  7, 4, N'Enak'),
-        (7,  4,  6, 4, N'Standar'),
-        (8,  5,  7, 5, N'Segar'),
-        (9,  5,  8, 4, N'Murah'),
-        (10, 6,  8, 5, N'Mantap'),
-        (11, 7,  5, 5, N'Porsi besar'),
-        (12, 7,  7, 4, N'Oke'),
-        (13, 8,  6, 4, N'Enak'),
-        (14, 9,  5, 5, N'Kuahnya enak'),
-        (15, 9,  8, 4, N'Lumayan'),
-        (16, 10, 7, 4, N'Oke');
+        (1,  1,  12, 5, N'Enak!'),
+        (2,  1,  13, 4, N'Oke'),
+        (3,  2,  12, 4, N'Lumayan'),
+        (4,  3,  12, 5, N'Baksonya mantap'),
+        (5,  3,  13, 5, N'Jumbo!'),
+        (6,  3,  14, 4, N'Enak'),
+        (7,  4,  13, 4, N'Standar'),
+        (8,  5,  14, 5, N'Segar'),
+        (9,  5,  15, 4, N'Murah'),
+        (10, 6,  15, 5, N'Mantap'),
+        (11, 7,  12, 5, N'Porsi besar'),
+        (12, 7,  14, 4, N'Oke'),
+        (13, 8,  13, 4, N'Enak'),
+        (14, 9,  12, 5, N'Kuahnya enak'),
+        (15, 9,  15, 4, N'Lumayan'),
+        (16, 10, 14, 4, N'Oke');
     SET IDENTITY_INSERT dbo.REVIEWS OFF;
     DBCC CHECKIDENT ('dbo.REVIEWS', RESEED, 16) WITH NO_INFOMSGS;
     PRINT 'Seed REVIEWS selesai.';
