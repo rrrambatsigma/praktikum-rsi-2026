@@ -23,7 +23,7 @@ sqlcmd -S localhost -E -C -i db\03-seed.sql
 | Hands-on | Isi |
 | --- | --- |
 | [Hands-on 1 — Setup & Koneksi](hands-on-1-setup-koneksi) | Setup database/user + koneksi backend (driver `mssql`) |
-| [Hands-on 2 — ORM Drizzle](hands-on-2-orm-drizzle) | CRUD + filter + pagination + join via Drizzle ORM; dokumentasi API (Swagger UI dari anotasi `@openapi`) di `/docs` |
+| [Hands-on 2 — ORM Drizzle](hands-on-2-orm-drizzle) | CRUD + filter + pagination + join via Drizzle ORM; dokumentasi API (Swagger UI via `swagger-autogen`) di `/docs` |
 
 ## Catatan
 

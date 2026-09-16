@@ -1,28 +1,18 @@
 import express, { type Request, type Response, type Application } from 'express';
 import { sql } from 'drizzle-orm';
 import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './docs/swagger-output.json' with { type: 'json' };
 import { getDb } from './db/index.ts';
 import { stallRouter } from './routes/stallRouter.ts';
-import { openapiSpec } from './docs/openapi.ts';
 
 const app: Application = express();
 const PORT: number = 3000;
 
 app.use(express.json());
 
-// Dokumentasi API (Swagger UI) — spesifikasi masih kosong.
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
+// Dokumentasi API (Swagger UI) dari spec hasil generate swagger-autogen.
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-/**
- * @openapi
- * /health:
- *   get:
- *     tags: [Health]
- *     summary: Cek koneksi server & database
- *     responses:
- *       200:
- *         description: OK
- */
 app.get('/health', async (req: Request, res: Response) => {
   try {
     const db = await getDb();

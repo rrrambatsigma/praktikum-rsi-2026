@@ -30,8 +30,8 @@ sqlcmd -S localhost -E -C -i ..\db\03-seed.sql
 
 ```bash
 npm init -y
-npm install express mssql dotenv drizzle-orm@1.0.0-rc.5-5935859 swagger-ui-express swagger-jsdoc
-npm install -D typescript @types/express @types/mssql @types/node tsx drizzle-kit@1.0.0-rc.5-5935859 @types/swagger-ui-express @types/swagger-jsdoc
+npm install express mssql dotenv drizzle-orm@1.0.0-rc.5-5935859 swagger-ui-express swagger-autogen
+npm install -D typescript @types/express @types/mssql @types/node tsx drizzle-kit@1.0.0-rc.5-5935859 @types/swagger-ui-express
 ```
 
 > Versi `drizzle-orm`/`drizzle-kit` dipatok ke RC yang sudah diuji. Drizzle untuk MSSQL
@@ -44,7 +44,10 @@ npm install -D typescript @types/express @types/mssql @types/node tsx drizzle-ki
   "main": "src/index.ts",
   "scripts": {
     "start": "tsx src/index.ts",
-    "dev": "tsx watch src/index.ts"
+    "prestart": "npm run docs:gen",
+    "dev": "tsx watch src/index.ts",
+    "predev": "npm run docs:gen",
+    "docs:gen": "tsx src/docs/swagger.ts"
   },
   "type": "commonjs"
 }
@@ -235,7 +238,7 @@ npm run dev
 | Method | Endpoint | Hasil |
 | --- | --- | --- |
 | GET | `/health` | `200` koneksi DB OK |
-| GET | `/docs` | Swagger UI — endpoint dibaca dari anotasi `@openapi` |
+| GET | `/docs` | Swagger UI (spec hasil generate `swagger-autogen`) |
 | GET | `/api/v1/stalls?search=&category=&page=&limit=` | `200` daftar + `meta {page,limit,total}` |
 | GET | `/api/v1/stalls/:id` | `200` detail, `404` bila tak ada |
 | GET | `/api/v1/stalls/:id/menus` | `200` daftar menu (join) |
@@ -253,36 +256,49 @@ curl.exe "http://localhost:3000/api/v1/stalls?category=Minuman&limit=2&page=1"
 
 ## Dokumentasi API (Swagger UI)
 
-Dokumentasi dibangun dengan **`swagger-jsdoc`**: spec OpenAPI dirakit dari anotasi
-JSDoc `@openapi` di file route, lalu disajikan lewat **`swagger-ui-express`** di
-`http://localhost:3000/docs`.
+Dokumentasi dibangun dengan **`swagger-autogen`**: ia memindai file route/entry,
+mendeteksi **path + method secara otomatis**, sedangkan parameter & response ditambahkan
+lewat komentar singkat `#swagger.*` di dalam handler. Hasilnya disajikan lewat
+**`swagger-ui-express`** di `http://localhost:3000/docs`.
 
-- `src/docs/openapi.ts` — konfigurasi `swagger-jsdoc` (info, `servers`, schema `StallInput`, glob `apis`).
-- `src/index.ts` — mount Swagger UI + anotasi `@openapi` untuk `GET /health`.
-- `src/routes/stallRouter.ts` — anotasi `@openapi` untuk tiap endpoint.
+Alur:
 
-Contoh anotasi di atas sebuah route:
+1. `npm run docs:gen` — memindai `src/index.ts` (beserta router yang diimpor) dan
+   menghasilkan `src/docs/swagger-output.json`.
+2. `npm run dev` — menyajikan spec tersebut di `/docs`.
+   (`predev`/`prestart` otomatis menjalankan `docs:gen` sebelum server start.)
+
+Karena `#swagger.*` harus berada di dalam body handler, route ditulis sebagai handler
+**inline** yang memanggil controller, mis.:
 
 ```ts
-/**
- * @openapi
- * /api/v1/stalls/{id}:
- *   get:
- *     tags: [Stalls]
- *     summary: Detail warung
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: integer }
- *     responses:
- *       200:
- *         description: Detail warung
- */
-stallRouter.get('/:id', stallController.getStallById);
+stallRouter.get('/', (req, res) => {
+  // #swagger.parameters['search']   = { in: 'query', type: 'string' }
+  // #swagger.parameters['category'] = { in: 'query', type: 'string' }
+  // #swagger.parameters['page']     = { in: 'query', type: 'integer' }
+  // #swagger.parameters['limit']    = { in: 'query', type: 'integer' }
+  // #swagger.responses[200] = { description: 'Daftar warung' }
+  return stallController.getStalls(req, res);
+});
+
+stallRouter.post('/', (req, res) => {
+  // #swagger.parameters['body'] = { in: 'body', required: true, schema: { $ref: '#/definitions/StallInput' } }
+  // #swagger.responses[201] = { description: 'Warung dibuat' }
+  return stallController.createStall(req, res);
+});
 ```
 
-Buka `/docs`, lalu klik **Try it out** untuk mengirim request langsung ke server.
+File terkait:
+
+- `src/docs/swagger.ts` — definisi `info`, `servers`, `definitions.StallInput`, lalu `swaggerAutogen()(outputFile, endpointsFiles, doc)`.
+- `src/docs/swagger-output.json` — **hasil generate** (di-`.gitignore`, jangan diedit manual).
+- `src/routes/stallRouter.ts` — handler inline + `#swagger.parameters`/`#swagger.responses`.
+- `src/index.ts` — `app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));`
+
+Buka `/docs`, lalu klik **Try it out** untuk mengisi parameter/body dan mengirim request.
+
+> Spec yang dihasilkan berformat **Swagger 2.0** — karena itu schema dirujuk lewat
+> `#/definitions/...` (bukan `#/components/schemas/...`).
 
 ---
 
@@ -310,7 +326,9 @@ hands-on-2-orm-drizzle/
    ├─ db/
    │  ├─ schema.ts            # pemetaan tabel (manual)
    │  └─ index.ts            # koneksi Drizzle
-   ├─ docs/openapi.ts         # konfigurasi swagger-jsdoc
+   ├─ docs/
+   │  ├─ swagger.ts           # generator spec (swagger-autogen)
+   │  └─ swagger-output.json  # hasil generate (gitignored)
    ├─ dtos/stallDto.ts
    ├─ repositories/
    │  ├─ stallRepository.ts

@@ -6,7 +6,10 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "tsx src/index.ts",
-    "dev": "tsx watch src/index.ts"
+    "prestart": "npm run docs:gen",
+    "dev": "tsx watch src/index.ts",
+    "predev": "npm run docs:gen",
+    "docs:gen": "tsx src/docs/swagger.ts"
   },
   "type": "commonjs",
   "dependencies": {
@@ -14,14 +17,13 @@
     "drizzle-orm": "^1.0.0-rc.5-5935859",
     "express": "^5.2.1",
     "mssql": "^11.0.2",
-    "swagger-jsdoc": "^6.3.0",
+    "swagger-autogen": "^2.23.7",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/mssql": "^9.1.11",
     "@types/node": "^26.5.1",
-    "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "drizzle-kit": "^1.0.0-rc.5-5935859",
     "tsx": "^4.23.13",

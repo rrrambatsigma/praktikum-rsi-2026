@@ -6,6 +6,9 @@ dist/
 *.log
 .DS_Store
 
+# generated
+swagger-output.json
+
 # Editor / IDE
 .vs/
 .vscode/
