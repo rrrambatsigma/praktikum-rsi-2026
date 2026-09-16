@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import mssql from 'mssql';
 import { drizzle } from 'drizzle-orm/node-mssql';
-import * as schema from './schema.ts';
 
 const config: mssql.config = {
   server: process.env.DB_SERVER ?? 'localhost',
@@ -22,7 +21,7 @@ let dbPromise: ReturnType<typeof buildDb> | null = null;
 async function buildDb() {
   poolPromise ??= mssql.connect(config);
   const pool = await poolPromise;
-  return drizzle({ client: pool, schema });
+  return drizzle({ client: pool });
 }
 
 // Satu instance Drizzle dipakai ulang untuk seluruh aplikasi.

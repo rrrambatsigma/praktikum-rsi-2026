@@ -55,6 +55,7 @@ export class StallService {
 
   async createStall(input: CreateStallInput): Promise<StallResponseDto> {
     const row = await this.stallRepository.create(input);
+    if (!row) throw new Error('STALL_NOT_FOUND');
     return this.toDto(row);
   }
 
