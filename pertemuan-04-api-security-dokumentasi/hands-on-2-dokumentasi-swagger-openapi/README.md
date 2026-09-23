@@ -98,7 +98,9 @@ npm install -D @types/swagger-ui-express
 > tanpa patokan, pemasangan zod v4 akan mengubah perilaku validasi yang kita bangun di
 > hands-on 1.
 
-Isi akhir `package.json`:
+Isi akhir `package.json`. Blok ini adalah **hasil akhir** — `npm init` dari pertemuan-03
+plus perintah install di atas yang otomatis menambah dependensi. Tidak perlu diketik
+manual; cukup samakan bila editor kamu menghasilkan versi berbeda:
 
 ```json
 {
@@ -283,12 +285,21 @@ registry.registerPath({
   summary: 'Detail warung',
   request: { params: idParamSchema },
   responses: {
-    200: { description: 'Detail warung', content: { 'application/json': { schema: stallDetail } } },
+    200: { description: 'Detail warung', content: { 'application/json': { schema: stallDetailResponse } } },
     400: { description: 'Parameter id tidak valid', content: { 'application/json': { schema: errorSchema } } },
     404: { description: 'Warung tidak ditemukan', content: { 'application/json': { schema: errorSchema } } },
   },
 });
 ```
+
+Endpoint lain mengikuti pola yang sama persis — cukup ganti `method`, `path`, dan daftar
+`responses`-nya:
+
+- `GET /api/v1/stalls` — `request: { query: stallQuerySchema }`, respons `200` (list + meta) & `400`.
+- `GET /health` — respons `200`.
+- `PUT /api/v1/stalls/{id}` — `request: { params, body: stallUpdate }`, respons `200`/`400`/`404`.
+- `DELETE /api/v1/stalls/{id}` — `request: { params }`, respons `200`/`404`.
+- `GET /api/v1/stalls/{id}/menus` — `request: { params }`, respons `200` (list menu) & `404`.
 
 `src/docs/openapi.ts` — bagian 3: bangkitkan dokumen **di memori** (tanpa file, tanpa
 langkah `docs:gen`):
@@ -343,7 +354,7 @@ Contoh hasil generate — fragmen spek untuk `POST /api/v1/stalls`
         "properties": {
           "ownerId": { "type": "number", "example": 2 },
           "name": { "type": "string", "minLength": 3, "example": "Warung Baru" },
-          "category": { "type": "string", "minLength": 1, "nullable": true }
+          "category": { "type": "string", "maxLength": 50, "nullable": true }
         },
         "required": ["ownerId", "name"],
         "additionalProperties": false
@@ -436,7 +447,6 @@ karena spek tidak bisa melenceng dari skema validasi.
 | `requestBody` inline (bukan `$ref`) | Pakai **nilai kembalian** `registry.register('X', schema)` di `content.schema`, bukan variabel skema aslinya. |
 | Contoh/deskripsi tidak muncul | Field belum di-`.openapi({ example, description })`. Metadata `example` lebih diutamakan daripada `examples`. |
 | Validasi menolak request dari Swagger UI | Spek hanya dokumentasi; validasi & error handling tetap bekerja normal dari middleware `validate`. Pastikan isi body sesuai contoh. |
-| Added `accept`/`content-type` header tak dikenal muncul di `req.params`? | Tidak — hanya `z.coerce` di `idParamSchema` yang dipakai untuk params; header lain tidak memengaruhi validasi. |
 
 ## Struktur Project
 

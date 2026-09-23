@@ -117,12 +117,19 @@ Terminal: Install zod, uninstall swagger
 
 ```bash
 npm install zod
-npm uninstall swagger-autogen swagger-ui-express
+npm uninstall swagger-autogen swagger-ui-express @types/swagger-ui-express
 ```
 
 `zod` = validator berbasis schema yang sekaligus menjadi sumber tipe TypeScript lewat
 `z.infer`. Di hands-on 2, schema yang sama ini akan dipakai lagi untuk membangkitkan
 dokumentasi OpenAPI (single source of truth).
+
+> **Perhatian:** `npm uninstall` hanya membersihkan blok `dependencies`/`devDependencies`.
+> Bagian `scripts` pada `package.json` hasil salinan masih membawa
+> `prestart`/`predev`/`docs:gen` dari pertemuan-03 yang memanggil `tsx src/docs/swagger.ts`.
+> Bila dibiarkan, `npm run dev` akan memicu `predev` → `docs:gen` → error (file sudah
+> dihapus). Edit `package.json` dan **hapus ketiga script itu secara manual** — sisakan
+> hanya `start` & `dev` (sama seperti blok hasil akhir di bawah).
 
 Bersihkan sisa folder dokumentasi pertemuan-03 (sudah tidak dipakai):
 
@@ -132,7 +139,9 @@ Terminal: Hapus folder docs lama
 Remove-Item -Recurse src\docs
 ```
 
-Isi akhir `package.json` (sengaja sudah tidak ada dependensi swagger):
+Isi akhir `package.json` (sengaja sudah tidak ada dependensi swagger). Blok ini adalah
+**hasil akhir** dari `npm init` di pertemuan-03 + perintah install/uninstall di atas —
+tidak perlu diketik manual; cukup samakan bila editor kamu menghasilkan nama/versi berbeda:
 
 ```json
 {
