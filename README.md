@@ -13,6 +13,13 @@ Repository latihan (_hands-on_) pendamping situs materi **Praktikum Rekayasa Sis
 | [Hands-on 1 — Setup & Koneksi](pertemuan-03-database-backend-crud/hands-on-1-setup-koneksi) | Setup SQL Server + koneksi backend (driver `mssql`) |
 | [Hands-on 2 — ORM Drizzle](pertemuan-03-database-backend-crud/hands-on-2-orm-drizzle) | CRUD, filter, pagination, join via Drizzle ORM |
 
+### Pertemuan 04 — API Security & Dokumentasi
+
+| Hands-on | Deskripsi |
+| --- | --- |
+| [Hands-on 1 — Validasi & Error Handling](pertemuan-04-api-security-dokumentasi/hands-on-1-validasi-error-handling) | Validasi body/query/params dengan zod + error handling terstruktur (terpusat) |
+| [Hands-on 2 — Dokumentasi Swagger/OpenAPI](pertemuan-04-api-security-dokumentasi/hands-on-2-dokumentasi-swagger-openapi) | Spek OpenAPI 3.0 dari schema zod (`zod-to-openapi`) di Swagger UI `/docs` |
+
 ## Persyaratan
 
 - Node.js **>= 22.18.0** dan npm
