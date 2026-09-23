@@ -179,8 +179,19 @@ export const idParamSchema = z.object({
 export const stallQuerySchema = z.object({
   search: z.string().trim().max(100).optional().openapi({ description: 'Cari berdasarkan nama warung' }),
   category: z.string().trim().max(50).optional().openapi({ description: 'Filter kategori warung', example: 'Minuman' }),
-  page: z.coerce.number().int().min(1).default(1).openapi({ description: 'Nomor halaman (default 1)', example: 1 }),
-  limit: z.coerce.number().int().min(1).max(100).default(10).openapi({ description: 'Jumlah data per halaman (maks 100)', example: 10 }),
+  page: z.coerce
+    .number({ invalid_type_error: 'page harus berupa angka' })
+    .int('page harus bilangan bulat')
+    .min(1, 'page minimal 1')
+    .default(1)
+    .openapi({ description: 'Nomor halaman (default 1)', example: 1 }),
+  limit: z.coerce
+    .number({ invalid_type_error: 'limit harus berupa angka' })
+    .int('limit harus bilangan bulat')
+    .min(1, 'limit minimal 1')
+    .max(100, 'limit maksimal 100')
+    .default(10)
+    .openapi({ description: 'Jumlah data per halaman (maks 100)', example: 10 }),
 });
 
 const optionalNullableText = (max: number) => z.string().trim().max(max).nullable().optional();
@@ -298,8 +309,8 @@ Endpoint lain mengikuti pola yang sama persis — cukup ganti `method`, `path`, 
 - `GET /api/v1/stalls` — `request: { query: stallQuerySchema }`, respons `200` (list + meta) & `400`.
 - `GET /health` — respons `200`.
 - `PUT /api/v1/stalls/{id}` — `request: { params, body: stallUpdate }`, respons `200`/`400`/`404`.
-- `DELETE /api/v1/stalls/{id}` — `request: { params }`, respons `200`/`404`.
-- `GET /api/v1/stalls/{id}/menus` — `request: { params }`, respons `200` (list menu) & `404`.
+- `DELETE /api/v1/stalls/{id}` — `request: { params }`, respons `200`/`400`/`404`.
+- `GET /api/v1/stalls/{id}/menus` — `request: { params }`, respons `200` (list menu)/`400` & `404`.
 
 `src/docs/openapi.ts` — bagian 3: bangkitkan dokumen **di memori** (tanpa file, tanpa
 langkah `docs:gen`):
@@ -378,15 +389,20 @@ app.use(express.json());
 // Dokumentasi API OpenAPI 3.0 (dibangkitkan dari schema zod di memori).
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
+// Raw spek OpenAPI 3.0 (hasil generate di memori) — untuk import ke Postman/dll.
+app.get('/docs/swagger.json', (_req, res) => {
+  res.status(200).json(openApiDocument);
+});
+
 app.get('/health', async (_req, res) => { /* ... */ });
 app.use('/api/v1/stalls', stallRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 ```
 
-Struktur middleware lain (validasi, error handler) **tetap persis** seperti hands-on 1.
-`/docs` ditempatkan **di atas** `notFoundHandler`/`errorHandler` agar tidak dianggap
-rute asing.
+Struktur middleware lainnya (validasi, error handler) **tetap persis** seperti hands-on 1.
+`/docs` dan `/docs/swagger.json` ditempatkan **di atas** `notFoundHandler`/`errorHandler`
+agar tidak dianggap rute asing.
 
 ## Langkah 6 — Jalankan & uji
 
@@ -423,6 +439,28 @@ Respons `400` yang tampil di Swagger UI persis seperti di hands-on 1:
 
 > **Catatan:** Swagger UI browser memanggil `http://localhost:3000` langsung dari browser
 > kamu — pastikan tidak ada proxy/CORS manager yang memblokir origin `localhost:3000`.
+
+### Alternatif 2: import ke Postman (spek OpenAPI)
+
+Server juga menyediakan **raw spek OpenAPI** di `/docs/swagger.json` — ini bisa di-import
+ke Postman sehingga semua endpoint + skema + contoh otomatis menjadi *collection*:
+
+1. Jalankan server (`npm run dev`), pastikan database aktif — `/health` balas `200`.
+2. Buka **Postman** → tombol **Import** (kiri atas) → pilih tab **Link**.
+3. Isi `http://localhost:3000/docs/swagger.json` → **Continue** → **Import**.
+   Postman membuat collection **"Review Kantin API"** berisi semua endpoint
+   (`/health`, `GET/POST /api/v1/stalls`, `GET/PUT/DELETE /api/v1/stalls/{id}`,
+   `GET /api/v1/stalls/{id}/menus`) lengkap dengan skema & contoh dari metadata `.openapi()`.
+4. Buka `POST /api/v1/stalls` → tab **Body → raw → JSON** sudah terisi contoh
+   (`ownerId`, `name`, dst) → klik **Send** → `201`.
+5. Coba kirim body kosong atau tanpa `name` → `400` dengan `errors` — validasi tetap aktif,
+   Postman hanya mengirim request seperti curl/browser.
+6. Detail untuk endpoint lain: parameter query (`page`, `limit`, `search`, `category`)
+   muncul di tab **Params**, sedangkan `{id}` di-isi di **Path Variables**.
+
+Postman tidak menambah/mengurangi perilaku server — hasilnya sama persis dengan curl.
+Bila import gagal, pastikan `/docs/swagger.json` menjawab `200` (coba `curl.exe
+http://localhost:3000/docs/swagger.json`), bukan masuk ke `notFoundHandler`.
 
 ## Swagger 2.0 (pertemuan 3) vs OpenAPI 3.0 (pertemuan 4)
 

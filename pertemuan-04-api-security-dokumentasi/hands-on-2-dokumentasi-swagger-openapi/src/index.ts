@@ -12,6 +12,13 @@ const PORT: number = 3000;
 
 app.use(express.json());
 
+// Raw spek OpenAPI 3.0 (hasil generate di memori) — untuk import ke Postman/dll.
+// Wajib didaftarkan SEBELUM app.use('/docs', swaggerUi.serve, ...) karena
+// swagger-ui-express menangkap setiap path di bawah /docs dan mengembalikan index.html.
+app.get('/docs/swagger.json', (_req, res) => {
+  res.status(200).json(openApiDocument);
+});
+
 // Dokumentasi API OpenAPI 3.0 (dibangkitkan dari schema zod di memori).
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 

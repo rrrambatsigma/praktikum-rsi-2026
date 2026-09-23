@@ -204,6 +204,10 @@ registry.registerPath({
       description: 'Warung terhapus',
       content: { 'application/json': { schema: stallDetailResponse } },
     },
+    400: {
+      description: 'Parameter id tidak valid',
+      content: { 'application/json': { schema: errorSchema } },
+    },
     404: {
       description: 'Warung tidak ditemukan',
       content: { 'application/json': { schema: errorSchema } },
@@ -220,6 +224,10 @@ registry.registerPath({
     200: {
       description: 'Daftar menu milik warung',
       content: { 'application/json': { schema: menuListResponse } },
+    },
+    400: {
+      description: 'Parameter id tidak valid',
+      content: { 'application/json': { schema: errorSchema } },
     },
     404: {
       description: 'Warung tidak ditemukan',

@@ -221,8 +221,17 @@ export const idParamSchema = z.object({
 export const stallQuerySchema = z.object({
   search: z.string().trim().max(100).optional(),
   category: z.string().trim().max(50).optional(),
-  page: z.coerce.number().int().min(1, 'page minimal 1').default(1),
-  limit: z.coerce.number().int().min(1, 'limit minimal 1').max(100, 'limit maksimal 100').default(10),
+  page: z.coerce
+    .number({ invalid_type_error: 'page harus berupa angka' })
+    .int('page harus bilangan bulat')
+    .min(1, 'page minimal 1')
+    .default(1),
+  limit: z.coerce
+    .number({ invalid_type_error: 'limit harus berupa angka' })
+    .int('limit harus bilangan bulat')
+    .min(1, 'limit minimal 1')
+    .max(100, 'limit maksimal 100')
+    .default(10),
 });
 
 const optionalNullableText = (max: number) =>
@@ -552,6 +561,11 @@ Terminal: Jalankan server (development)
 npm run dev
 ```
 
+Ada **dua cara uji** di bawah ini — pilih salah satu: **A. Terminal (curl)** atau
+**B. Postman**, keduanya mengirim request yang sama persis.
+
+### A. Terminal (curl)
+
 Kasus uji **valid** — balas `200`/`201`:
 
 Terminal: Request valid
@@ -633,6 +647,39 @@ Contoh respons error lainnya:
 - `404` — `{ "status": "fail", "message": "Warung tidak ditemukan" }`
 - `404` rute asing — `{ "status": "fail", "message": "Route tidak ditemukan: GET /api/v1/xyz" }`
 
+### B. Postman
+
+Semua kasus uji di atas bisa dijalankan lewat Postman — tidak perlu menulis JSON dengan
+backslash (masalah di PowerShell hilang karena Postman menyimpan body sebagai teks/JSON
+mentah).
+
+1. **Buka Postman** → klik **+** (New / Create a request).
+2. **Valid (list warung):** method `GET`, URL `http://localhost:3000/api/v1/stalls`.
+   Tab **Params**: isi `page = 1`, `limit = 2` → **Send**.
+   Hasil: status `200 OK`, tab **Body** menampilkan `status: success`, `meta.page: 1`,
+   `meta.limit: 2`, dan `data` berisi 2 warung.
+3. **Valid (tambah warung):** method `POST`, URL `http://localhost:3000/api/v1/stalls`.
+   Tab **Body → raw → JSON**, isi:
+   ```json
+   { "ownerId": 2, "name": "Warung Baru" }
+   ```
+   → **Send** → `201 Created` + objek warung baru (id terisi, `avgRating: 0`,
+   `isPopular: false`).
+4. **Invalid (query):** di tab **Params** ubah `page` menjadi `abc` → **Send** →
+   `400 Bad Request` + `errors` berisi `field: page, message: page harus berupa angka`.
+   Coba juga `limit = 500` → `400` + `limit maksimal 100`.
+5. **Invalid (params):** method `GET`, URL `http://localhost:3000/api/v1/stalls/abc` →
+   **Send** → `400`.
+6. **Invalid (body):** method `POST`, body `{ "ownerId": 2 }` → `400` +
+   `name wajib diisi`. Coba `{ "ownerId": -1, "name": "ab" }` → `400` dengan **dua** error.
+7. **JSON rusak:** body `{bad json` → **Send** → `400` + `JSON pada body tidak valid`.
+8. **404:** method `GET`, URL `http://localhost:3000/api/v1/stalls/999999` →
+   `404 Not Found` + `Warung tidak ditemukan`. Rute asing
+   (`http://localhost:3000/api/v1/xyz`) → `404` + `Route tidak ditemukan...`.
+
+Di Postman, **status code** tampil di kanan atas hasil respons, sedangkan isi respons ada
+di tab **Body** — cocokkan dengan tabel rangkuman di bawah.
+
 ### Rangkuman kasus uji
 
 | Method | Endpoint | Perilaku |
@@ -650,7 +697,7 @@ Contoh respons error lainnya:
 | --- | --- |
 | `400 JSON pada body tidak valid` padahal JSON tampak benar | Di PowerShell, `{"a":1}` butuh tanda kutip **single**: `-d '{"a":1}'` — backslash `\"` bukan escape di PowerShell, jadi JSON-nya rusak. |
 | `500 Terjadi kesalahan pada server` | Error tak terduga; cek log terminal (`console.error`). Kalau soal DB, cek kembali prasyarat pertemuan-03. |
-| Pesan validasi default Inggris (mis. `Expected number, received nan`) | Itu pesan bawaan zod untuk **coerce** gagal. Untuk custom, beri argumen pesan: `.number({ invalid_type_error: '...' })` atau `.min(1, '...')`. |
+| Pesan validasi tampil Bahasa Indonesia semua | Memang sengaja: tiap `z.coerce.number()` diberi `invalid_type_error` (mis. `page harus berupa angka`). Bila kamu menghapus argumen pesan itu, zod memakai pesan bawaan Inggris (`Expected number, received nan`). |
 | `Cannot connect to localhost` | Server/instans SQL Server tidak aktif, TCP belum aktif, atau `.env` salah. Ingat DB **tidak** perlu dibuat ulang — sudah di-setup di pertemuan-03. |
 | Error `ERESOLVE` saat install | Versi `typescript` dkk bentrok; pastikan mengikuti `package.json` di atas, lalu `npm install` ulang. |
 
