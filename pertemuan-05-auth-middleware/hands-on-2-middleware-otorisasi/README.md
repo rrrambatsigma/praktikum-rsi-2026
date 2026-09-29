@@ -698,13 +698,8 @@ export class ReviewRepository {
   /**
    * Hitung ulang ringkasan warung (avg_rating & review_count) dari tabel REVIEWS.
    *
-   * Dua detail yang mudah terlewat di SQL Server:
-   * 1. Dua langkah terpisah (SELECT agregat lalu UPDATE) jauh lebih mudah dibaca
-   *    daripada menyisipkan AVG() langsung di dalam UPDATE, yang mudah salah begitu
-   *    filter warung atau GROUP BY-nya lupa ditulis.
-   * 2. `rating` bertipe INT, jadi AVG()-nya ikut dihitung sebagai bilangan bulat dan
-   *    hasil 4.5 ikut terpotong jadi 4. Karena itu rating di-cast ke DECIMAL dulu
-   *    sebelum dirata-ratakan.
+   * `rating` di-cast ke DECIMAL dulu: kolomnya INT, jadi tanpa cast SQL Server
+   * memotong bagian desimal AVG()-nya dan (4 + 5) / 2 tersimpan sebagai 4.
    */
   async refreshStallSummary(stallId: number) {
     const db = await getDb();
@@ -738,23 +733,11 @@ kolom itu harus dihitung ulang. `SELECT` agregat terpisah lalu `UPDATE` hasilnya
 mudah dibaca dan di-debug daripada menyisipkan `AVG()` langsung di dalam `UPDATE`, yang
 sungguh mudah salah begitu filter warung atau `GROUP BY`-nya lupa ditulis.
 
-### Jebakan `AVG()` di SQL Server: bulatkan ke bawah, diam-diam
-
-Coba jalankan dua query ini di SSMS pada warung yang punya rating 4 dan 5:
-
-```sql
-SELECT AVG(rating) FROM dbo.REVIEWS WHERE stall_id = 4;                            -- 4
-SELECT AVG(CAST(rating AS DECIMAL(10, 4))) FROM dbo.REVIEWS WHERE stall_id = 4;    -- 4.5000
-```
-
-Hasilnya **4**, bukan 4.5 — bukan karena salah hitung, tapi karena `rating` bertipe `INT`.
-Di SQL Server, `AVG()` ikut mengikuti tipe datanya: rata-rata dua bilangan bulat dihitung
-sebagai bilangan bulat, lalu bagian desimalnya dipotong. Bug seperti ini lolos ke produksi
-karena tidak pernah throws — hasilnya cuma "kurang tepat" satu angka.
-
-Karena itu baris `avg(sql<number>\`cast(${reviews.rating} as decimal(10, 4))\`)` itu bukan
-gaya penulisan, tapi koreksi. Angka direportService punya masalah yang sama, jadi ikut
-di-cast di sana. Kalau suatu saat schema-nya berubah ke `DECIMAL`, cast-nya boleh dihapus.
+Dua hal kecil di query itu yang perlu dijaga. Pertama, `SELECT`-nya wajib difilter
+`stallId` — tanpa itu, rata-ratanya menghitung seluruh tabel. Kedua, `rating` bertipe `INT`,
+dan `AVG()` di SQL Server ikut mengikuti tipe datanya, sehingga bagian desimalnya terpotong:
+`(4 + 5) / 2` jadi `4`, bukan `4.5`. Karena itu `rating` di-`cast` ke `DECIMAL` dulu sebelum
+dirata-ratakan. `ReportService` punya masalah yang sama, jadi ikut di-`cast` di sana.
 
 Buat `src/services/reviewService.ts`:
 
@@ -896,8 +879,7 @@ export class ReportService {
     const db = await getDb();
 
     // Empat agregat yang tidak saling bergantung, jadi dikirim bersamaan.
-    // `rating` bertipe INT, jadi harus di-cast ke DECIMAL sebelum di-AVG();
-    // tanpa itu hasil rata-ratanya ikut dipotong jadi bilangan bulat.
+    // Cast ke DECIMAL dulu, sama alasannya seperti di ReviewRepository.
     const [userRows, stallRows, reviewRows, averageRows] = await Promise.all([
       db.select({ total: count() }).from(users),
       db.select({ total: count() }).from(stalls),

@@ -15,8 +15,7 @@ export class ReportService {
     const db = await getDb();
 
     // Empat agregat yang tidak saling bergantung, jadi dikirim bersamaan.
-    // `rating` bertipe INT, jadi harus di-cast ke DECIMAL sebelum di-AVG();
-    // tanpa itu hasil rata-ratanya ikut dipotong jadi bilangan bulat.
+    // Cast ke DECIMAL dulu, sama alasannya seperti di ReviewRepository.
     const [userRows, stallRows, reviewRows, averageRows] = await Promise.all([
       db.select({ total: count() }).from(users),
       db.select({ total: count() }).from(stalls),
