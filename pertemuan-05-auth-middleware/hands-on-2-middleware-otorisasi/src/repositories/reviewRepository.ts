@@ -42,13 +42,8 @@ export class ReviewRepository {
   /**
    * Hitung ulang ringkasan warung (avg_rating & review_count) dari tabel REVIEWS.
    *
-   * Dua detail yang mudah terlewat di SQL Server:
-   * 1. Dua langkah terpisah (SELECT agregat lalu UPDATE) jauh lebih mudah dibaca
-   *    daripada menyisipkan AVG() langsung di dalam UPDATE, yang mudah salah begitu
-   *    filter warung atau GROUP BY-nya lupa ditulis.
-   * 2. `rating` bertipe INT, jadi AVG()-nya ikut dihitung sebagai bilangan bulat dan
-   *    hasil 4.5 ikut terpotong jadi 4. Karena itu rating di-cast ke DECIMAL dulu
-   *    sebelum dirata-ratakan.
+   * `rating` di-cast ke DECIMAL dulu: kolomnya INT, jadi tanpa cast SQL Server
+   * memotong bagian desimal AVG()-nya dan (4 + 5) / 2 tersimpan sebagai 4.
    */
   async refreshStallSummary(stallId: number) {
     const db = await getDb();
