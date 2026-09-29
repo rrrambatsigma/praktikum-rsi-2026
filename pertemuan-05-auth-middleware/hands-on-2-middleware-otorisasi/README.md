@@ -345,17 +345,15 @@ const stallRouter = Router();
 const stallController = new StallController();
 const reviewController = new ReviewController();
 
-// ---------------------------------------------------------------- PUBLIK
-// Tiga handler pertama tanpa middleware auth apa pun. Ini disengaja: daftar,
-// detail, dan menu warung memang harus bisa dibaca tamu yang belum login.
+// Route publik: daftar, detail, dan menu warung. Tanpa middleware auth apa
+// pun — memang harus bisa dibaca tamu yang belum login.
 stallRouter.get('/', validate(stallQuerySchema, 'query'), stallController.getStalls);
 stallRouter.get('/:id', validate(idParamSchema, 'params'), stallController.getStallById);
 stallRouter.get('/:id/menus', validate(idParamSchema, 'params'), stallController.getStallMenus);
 
-// ------------------------------------------------------- TERLINDUNGI (401)
-// Urutannya: authenticate (token valid?) -> authorize (role cukup?) ->
-// validate (body/params benar?). Menaruh authenticate paling depan membuat
-// jawaban untuk request tanpa token SELALU 401, apa pun isi body-nya —
+// Route terlindungi. Urutannya: authenticate (token valid?) -> authorize (role
+// cukup?) -> validate (body/params benar?). Menaruh authenticate paling depan
+// membuat jawaban untuk request tanpa token SELALU 401, apa pun isi body-nya —
 // jadi tidak ada celah yang membocorkan aturan validasi ke pengguna anonim.
 stallRouter.post(
   '/',
@@ -380,8 +378,8 @@ stallRouter.post(
   reviewController.createReview,
 );
 
-// ------------------------------------------------------ ADMIN SAJA (403)
-// Satu authorize() dengan satu role sudah cukup, tanpa if-else di controller.
+// Hapus warung hanya untuk admin. Satu authorize() dengan satu role sudah
+// cukup, tanpa perlu if-else di dalam controller.
 stallRouter.delete(
   '/:id',
   authenticate,
@@ -540,7 +538,7 @@ Buka `src/controllers/authController.ts` dan tambahkan handler:
 Dan daftarkan di `src/routes/authRouter.ts`:
 
 ```typescript
-// TERLINDUNGI. Satu token valid dipakai untuk endpoint apa pun yang butuh
+// Route terlindungi. Satu token valid dipakai untuk endpoint apa pun yang butuh
 // "siapa kamu", termasuk yang tidak butuh role khusus.
 authRouter.get('/me', authenticate, authController.getMe);
 ```
@@ -954,8 +952,8 @@ import { authorize } from '../middlewares/authorize.ts';
 const adminRouter = Router();
 const adminController = new AdminController();
 
-// authenticate (401) DILETAKKAN LEBIH DAHULU daripada authorize (403):
-// tanpa token, server bahkan belum tahu role-nya siapa.
+// authenticate (401) diletakkan lebih dahulu daripada authorize (403): tanpa
+// token, server bahkan belum tahu rolenya siapa.
 adminRouter.get('/reports', authenticate, authorize('admin'), adminController.getReports);
 
 export { adminRouter };
@@ -968,8 +966,8 @@ import { adminRouter } from './routes/adminRouter.ts';
 
 // ...
 // Router khusus admin. Seluruh route di dalamnya dijaga authorize('admin'),
-// jadi menambah route baru di sini otomatis ikut terlindungi selama auth-nya
-// tidak lupa ditulis.
+// jadi menambah route baru di sini otomatis ikut terlindungi selama
+// middleware-nya tidak lupa ditulis.
 app.use('/api/v1/admin', adminRouter);
 ```
 
