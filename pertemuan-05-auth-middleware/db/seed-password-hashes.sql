@@ -1,7 +1,7 @@
 USE review_kantin;
 GO
 
--- ====================================================== PASSWORD SEED (bcrypt)
+-- Password seed (bcrypt).
 -- Seed di pertemuan-03 (db/03-seed.sql) masih memakai placeholder
 -- N'hash_admin', N'hash_owner1', dst. Nilai itu BUKAN hash bcrypt, jadi
 -- endpoint /auth/login akan selalu gagal membandingkannya.

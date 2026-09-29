@@ -10,7 +10,6 @@ import { loginSchema, registerSchema } from '../schemas/authSchema.ts';
 
 const registry = new OpenAPIRegistry();
 
-// ----------------------------------------------------------------- schema
 // Komponen schema untuk RESPONS (dibuat khusus di sini). Schema untuk BODY
 // (createStallSchema, updateStallSchema) sudah didefinisikan di stallSchema.ts
 // dan hanya "didaftarkan" agar dipakai ulang lewat $ref.
@@ -52,7 +51,6 @@ const errorSchema = registry.register(
   }),
 );
 
-// ------------------------------------------------------------------- auth
 // Komponen schema untuk endpoint /auth. Body request-nya (registerSchema,
 // loginSchema) juga dipakai sebagai validasi di middleware `validate`.
 const authUserSchema = registry.register(
@@ -124,7 +122,7 @@ const menuListResponse = registry.register(
   }),
 );
 
-// ------------------------------------------------------------------ routes
+// Definisi route.
 registry.registerPath({
   method: 'post',
   path: '/api/v1/auth/register',
@@ -332,7 +330,6 @@ registry.registerPath({
   },
 });
 
-// ----------------------------------------------------------------- generate
 // Dokumen OpenAPI 3.0 dihasilkan IN-MEMORY (tanpa file), lalu disajikan
 // swagger-ui-express di /docs — selalu sinkron dengan schema terbaru.
 const generator = new OpenApiGeneratorV3(registry.definitions);
