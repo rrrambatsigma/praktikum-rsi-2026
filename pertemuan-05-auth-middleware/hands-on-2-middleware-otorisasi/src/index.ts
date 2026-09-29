@@ -34,13 +34,13 @@ app.get('/health', async (_req, res) => {
 // Autentikasi: register & login. Dua-duanya route publik.
 app.use('/api/v1/auth', authRouter);
 
-// Tidak semua route stalls publik anymore — middleware dipasang per-route di
-// dalam stallRouter, sehingga yang tetap publik masih bisa dibaca tanpa token.
+// Stall tidak semuanya publik lagi — middleware dipasang per-route di dalam
+// stallRouter, sehingga yang tetap publik masih bisa dibaca tanpa token.
 app.use('/api/v1/stalls', stallRouter);
 
 // Router khusus admin. Seluruh route di dalamnya dijaga authorize('admin'),
-// jadi menambah route baru di sini otomatis ikut terlindungi selama auth-nya
-// tidak lupa ditulis.
+// jadi menambah route baru di sini otomatis ikut terlindungi selama
+// middleware-nya tidak lupa ditulis.
 app.use('/api/v1/admin', adminRouter);
 
 // 404 untuk rute yang tidak dikenal, lalu error handling terpusat (paling akhir).
