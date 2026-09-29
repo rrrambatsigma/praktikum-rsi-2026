@@ -312,7 +312,7 @@ Buat file `pertemuan-05-auth-middleware/db/seed-password-hashes.sql`:
 USE review_kantin;
 GO
 
--- ====================================================== PASSWORD SEED (bcrypt)
+-- Password seed (bcrypt).
 -- Seed di pertemuan-03 (db/03-seed.sql) masih memakai placeholder
 -- N'hash_admin', N'hash_owner1', dst. Nilai itu BUKAN hash bcrypt, jadi
 -- endpoint /auth/login akan selalu gagal membandingkannya.
@@ -462,7 +462,7 @@ Buat `src/schemas/authSchema.ts`:
 ```ts
 import { z } from 'zod';
 
-// ------------------------------------------------------------------- fields
+// Field dasar yang dipakai ulang oleh beberapa schema.
 // bcrypt hanya memproses 72 byte pertama, jadi password dibatasi di situ.
 const passwordSchema = z
   .string({ required_error: 'password wajib diisi' })
@@ -476,7 +476,7 @@ const emailSchema = z
   .email('format email tidak valid')
   .max(150, 'email maksimal 150 karakter');
 
-// -------------------------------------------------------------------- body
+// Body schema.
 // CATATAN: schema ini SENGAJA tidak punya field `role`.
 // Role diberikan server saat register (selalu 'customer'). Kalau `role`
 // diterima dari body, siapa pun bisa mendaftarkan diri sebagai admin.
@@ -504,7 +504,7 @@ export const loginSchema = z
   })
   .strict({ message: 'body hanya boleh berisi email dan password' });
 
-// ------------------------------------------------------------------ types
+// Tipe turunan dari schema di atas.
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 ```
@@ -963,7 +963,6 @@ Supaya `/docs` ikut memuat endpoint baru, tambahkan di `src/docs/openapi.ts`. Pe
 respons:
 
 ```ts
-// ------------------------------------------------------------------- auth
 // Komponen schema untuk endpoint /auth. Body request-nya (registerSchema,
 // loginSchema) juga dipakai sebagai validasi di middleware `validate`.
 const authUserSchema = registry.register(

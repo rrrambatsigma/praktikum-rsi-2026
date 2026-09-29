@@ -5,7 +5,7 @@ import { z } from 'zod';
 // Wajib dipanggil SEBELUM schema memakai `.openapi({ ... })`.
 extendZodWithOpenApi(z);
 
-// ------------------------------------------------------------------ params
+// Parameter path.
 // id pada /:id selalu coerce dari string query/path menjadi angka.
 export const idParamSchema = z.object({
   id: z.coerce
@@ -15,7 +15,7 @@ export const idParamSchema = z.object({
     .openapi({ example: 3, description: 'ID warung' }),
 });
 
-// ------------------------------------------------------------------- query
+// Query parameter.
 // Search & category opsional; page/limit punya default (zod.default = bila absent).
 export const stallQuerySchema = z.object({
   search: z
@@ -45,11 +45,11 @@ export const stallQuerySchema = z.object({
     .openapi({ description: 'Jumlah data per halaman (maks 100)', example: 10 }),
 });
 
-// --------------------------------------------------------------- field bantu
+// Field bantu: helper untuk field teks opsional.
 const optionalNullableText = (max: number) =>
   z.string().trim().max(max).nullable().optional();
 
-// -------------------------------------------------------------------- body
+// Body schema.
 export const createStallSchema = z
   .object({
     ownerId: z
@@ -79,7 +79,7 @@ export const createStallSchema = z
 // Semua kolom opsional untuk PUT (update sebagian).
 export const updateStallSchema = createStallSchema.partial();
 
-// ------------------------------------------------------------------ types
+// Tipe turunan dari schema di atas.
 export type IdParam = z.infer<typeof idParamSchema>;
 export type StallQuery = z.infer<typeof stallQuerySchema>;
 export type CreateStallInput = z.infer<typeof createStallSchema>;

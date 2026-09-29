@@ -420,7 +420,7 @@ Periksa kembali `src/schemas/stallSchema.ts`, dan **hapus** blok `ownerId` ini:
 Ganti dengan komentar pengantar:
 
 ```typescript
-// -------------------------------------------------------------------- body
+// Body schema.
 // CATATAN PENTING: schema ini TIDAK punya field `ownerId`.
 // Pemilik warung ditentukan server dari `req.user.id` (lihat stallController).
 // Kalau `ownerId` diterima dari body, satu akun owner bisa membuat warung
@@ -1081,7 +1081,7 @@ Buka `src/docs/openapi.ts`, tambahkan security scheme di bagian atas (tepat sete
 `const registry = ...`):
 
 ```typescript
-// ------------------------------------------------------------------ keamanan
+// Komponen keamanan.
 // Satu-satunya cara client mengirim token: header `Authorization: Bearer ...`.
 // Scheme ini juga membuat Swagger UI memunculkan tombol "Authorize" sehingga
 // token bisa diisi sekali di awal lalu terpakai otomatis di semua request.

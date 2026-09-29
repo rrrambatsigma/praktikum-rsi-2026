@@ -11,7 +11,7 @@ import { createReviewSchema } from '../schemas/reviewSchema.ts';
 
 const registry = new OpenAPIRegistry();
 
-// ------------------------------------------------------------------ keamanan
+// Komponen keamanan.
 // Satu-satunya cara client mengirim token: header `Authorization: Bearer ...`.
 // Scheme ini juga membuat Swagger UI memunculkan tombol "Authorize" sehingga
 // token bisa diisi sekali di awal lalu terpakai otomatis di semua request.
@@ -31,7 +31,6 @@ registry.registerComponent('securitySchemes', 'bearerAuth', {
  */
 const secured = [{ bearerAuth: [] }];
 
-// ----------------------------------------------------------------- schema
 // Komponen schema untuk RESPONS (dibuat khusus di sini). Schema untuk BODY
 // (createStallSchema, updateStallSchema) sudah didefinisikan di stallSchema.ts
 // dan hanya "didaftarkan" agar dipakai ulang lewat $ref.
@@ -126,7 +125,6 @@ const reportSchema = registry.register(
   }),
 );
 
-// ------------------------------------------------------------------- auth
 // Komponen schema untuk endpoint /auth. Body request-nya (registerSchema,
 // loginSchema) juga dipakai sebagai validasi di middleware `validate`.
 const authUserSchema = registry.register(
@@ -206,7 +204,7 @@ const menuListResponse = registry.register(
   }),
 );
 
-// ------------------------------------------------------------------ routes
+// Definisi route.
 registry.registerPath({
   method: 'post',
   path: '/api/v1/auth/register',
@@ -531,7 +529,6 @@ registry.registerPath({
   },
 });
 
-// ----------------------------------------------------------------- generate
 // Dokumen OpenAPI 3.0 dihasilkan IN-MEMORY (tanpa file), lalu disajikan
 // swagger-ui-express di /docs — selalu sinkron dengan schema terbaru.
 const generator = new OpenApiGeneratorV3(registry.definitions);
