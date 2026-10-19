@@ -1,27 +1,22 @@
 
 import { useState } from 'react'
-import {
-  ShoppingBasket,
-  Ban,
-  Star,
-} from 'lucide-react'
+import { ShoppingBasket, Ban, Star } from 'lucide-react'
 import type { MenuItem } from '../data/menu'
 
 interface MenuCardProps {
   menu: MenuItem
+  onSelect?: (menu: MenuItem) => void
 }
 
-function formatRupiah(price: number): string {
+export function formatRupiah(price: number): string {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     maximumFractionDigits: 0,
-  })
-    .format(price)
-    .replace(/\u00A0/g, '')
+  }).format(price)
 }
 
-function MenuCard({ menu }: MenuCardProps) {
+function MenuCard({ menu, onSelect }: MenuCardProps) {
   const [imageError, setImageError] = useState(false)
 
   return (
@@ -30,7 +25,13 @@ function MenuCard({ menu }: MenuCardProps) {
         !menu.available ? 'opacity-75' : ''
       }`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-orange-100">
+      <button
+        type="button"
+        onClick={() => menu.available && onSelect?.(menu)}
+        disabled={!menu.available}
+        className="relative block aspect-[4/3] w-full overflow-hidden bg-orange-100 text-left"
+        aria-label={`Lihat detail ${menu.name}`}
+      >
         {!imageError ? (
           <img
             src={menu.image}
@@ -43,18 +44,10 @@ function MenuCard({ menu }: MenuCardProps) {
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-orange-100 to-amber-50 text-orange-900">
-            <span className="text-5xl" aria-hidden="true">
-              {menu.category === 'Makanan'
-                ? '🍛'
-                : menu.category === 'Minuman'
-                  ? '🥤'
-                  : '🍞'}
-            </span>
-            <span className="text-sm font-semibold">
-              {menu.name}
-            </span>
+            <ShoppingBasket className="h-10 w-10" aria-hidden="true" />
+            <span className="text-sm font-semibold">{menu.name}</span>
             <span className="text-xs text-orange-800/60">
-              Placeholder gambar
+              Gambar belum tersedia
             </span>
           </div>
         )}
@@ -70,10 +63,9 @@ function MenuCard({ menu }: MenuCardProps) {
               : 'bg-red-100 text-red-700'
           }`}
         >
-          <span aria-hidden="true">● </span>
-          {menu.available ? 'Tersedia' : 'Tidak tersedia'}
+          {menu.available ? '● Tersedia' : '● Tidak tersedia'}
         </span>
-      </div>
+      </button>
 
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-2">
@@ -105,10 +97,7 @@ function MenuCard({ menu }: MenuCardProps) {
 
         <div className="mt-auto pt-5">
           <div className="flex items-end justify-between gap-2">
-            <span className="text-xs text-stone-500">
-              Harga porsi
-            </span>
-
+            <span className="text-xs text-stone-500">Harga porsi</span>
             <span
               className={`menu-price text-xl font-extrabold tracking-tight ${
                 menu.available
@@ -123,6 +112,7 @@ function MenuCard({ menu }: MenuCardProps) {
           <button
             type="button"
             disabled={!menu.available}
+            onClick={() => onSelect?.(menu)}
             className={`mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700 ${
               menu.available
                 ? 'bg-orange-800 text-white hover:bg-orange-900 active:scale-[0.98]'
