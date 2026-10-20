@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+/* ========================================
+   THEME — DESIGN TOKENS MAEM BOLO
+   Tailwind CSS v4
+   ======================================== */
+
+@theme {
+  /* Brand */
+  --color-primary-1: #b84208;
+  --color-primary-2: #963506;
+
+  /* Background */
+  --color-page: #fff8f4;
+  --color-surface: #ffffff;
+  --color-primary-soft: #fff0e6;
+
+  /* Typography colors */
+  --color-text: #29231f;
+  --color-muted: #796a61;
+  --color-muted-soft: #a3958d;
+
+  /* Borders */
+  --color-border: #f0e3db;
+  --color-border-hover: #ead0bf;
+
+  /* Status */
+  --color-success: #167443;
+  --color-danger: #b93838;
+  --color-warning: #a16207;
+  --color-info: #1d4ed8;
+
+  /* Status backgrounds */
+  --color-success-bg: #dcfce7;
+  --color-danger-bg: #fee2e2;
+  --color-warning-bg: #fef3c7;
+  --color-info-bg: #dbeafe;
+
+  /* Disabled elements */
+  --color-disabled-bg: #e7e5e4;
+  --color-disabled-text: #78716c;
+
+  /* Typography */
+  --font-heading: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgb(74 37 18 / 5%);
+  --shadow-card-hover: 0 10px 26px rgb(74 37 18 / 9%);
+  --shadow-dropdown: 0 8px 24px rgb(41 35 31 / 10%);
+
+  /* Radius */
+  --radius-card: 1rem;
+}
+
+/* ========================================
+   GLOBAL VARIABLES
+   ======================================== */
+
+:root {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-page);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================
+   RESET & BASE STYLES
+   ======================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  scroll-behavior: smooth;
+  background: var(--color-page);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+
+  color: var(--color-text);
+  background: var(--color-page);
+}
+
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: var(--font-body);
+}
+
+button,
+input,
+textarea,
+select {
+  font-size: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ========================================
+   ACCESSIBILITY & FOCUS
+   ======================================== */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgb(184 66 8 / 35%);
+  outline-offset: 3px;
+}
+
+/* ========================================
+   IMAGES
+   ======================================== */
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ========================================
+   HEADINGS & LINKS
+   ======================================== */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin-top: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ========================================
+   INPUT PLACEHOLDERS
+   ======================================== */
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted-soft);
+}
+
+/* ========================================
+   TEXT SELECTION
+   ======================================== */
+
+::selection {
+  color: var(--color-surface);
+  background: var(--color-primary-1);
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
