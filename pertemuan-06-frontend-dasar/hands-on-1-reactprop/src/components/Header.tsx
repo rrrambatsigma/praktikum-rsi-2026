@@ -1,4 +1,3 @@
-
 import { Search, MapPin, ShoppingCart } from 'lucide-react'
 
 interface HeaderProps {
@@ -8,7 +7,7 @@ interface HeaderProps {
 
 function Header({ search, onSearchChange }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-[#eee1d8] bg-[#fffaf7]/95 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-page/95 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-[1440px] flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4 sm:px-8 lg:flex-nowrap lg:px-10">
         {/* Brand */}
         <a
@@ -23,10 +22,10 @@ function Header({ search, onSearchChange }: HeaderProps) {
           />
 
           <span className="flex flex-col">
-            <span className="text-xl font-extrabold tracking-tight text-[#963506]">
+            <span className="font-heading text-xl font-extrabold tracking-tight text-primary-2">
               Maem Bolo
             </span>
-            <span className="mt-0.5 text-xs text-[#8b7970]">
+            <span className="mt-0.5 text-xs text-muted">
               Teman makanmu di kampus
             </span>
           </span>
@@ -38,29 +37,36 @@ function Header({ search, onSearchChange }: HeaderProps) {
             Cari menu
           </label>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-[#eadbd1] bg-white px-4 py-3 transition focus-within:border-[#c54b13] focus-within:ring-4 focus-within:ring-orange-700/10">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 transition-colors focus-within:border-primary-1 focus-within:ring-4 focus-within:ring-primary-1/10">
             <Search
               size={20}
               strokeWidth={1.8}
-              className="shrink-0 text-[#a18b7e]"
+              className="shrink-0 text-muted-soft"
+              aria-hidden="true"
             />
+
             <input
               id="header-search"
               type="search"
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Lagi pengin makan apa?"
-              className="w-full min-w-0 border-0 bg-transparent text-sm text-[#29231f] outline-none placeholder:text-[#a3958d]"
+              className="w-full min-w-0 border-0 bg-transparent text-sm text-text outline-none placeholder:text-muted-soft"
             />
           </div>
         </div>
 
         {/* Location and navigation */}
         <div className="ml-auto flex shrink-0 items-center gap-3">
-          <div className="hidden items-center gap-2 border-r border-[#eadbd1] pr-5 text-[#796a61] xl:flex">
-            <MapPin size={17} className="shrink-0 text-[#b84208]" />
+          <div className="hidden items-center gap-2 border-r border-border pr-5 text-muted xl:flex">
+            <MapPin
+              size={17}
+              className="shrink-0 text-primary-1"
+              aria-hidden="true"
+            />
+
             <span className="flex flex-col">
-              <span className="text-xs font-semibold text-[#493a32]">
+              <span className="text-xs font-semibold text-text">
                 Kantin FATISDA
               </span>
               <span className="mt-0.5 text-[11px]">
@@ -69,19 +75,22 @@ function Header({ search, onSearchChange }: HeaderProps) {
             </span>
           </div>
 
-          <nav aria-label="Navigasi utama" className="flex items-center gap-2">
+          <nav
+            aria-label="Navigasi utama"
+            className="flex items-center gap-2"
+          >
             <a
               href="#menu"
-              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-[#6f5d53] transition hover:bg-[#f5e9e0] hover:text-[#963506]"
+              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-primary-soft hover:text-primary-2"
             >
               Menu
             </a>
 
             <a
               href="#keranjang"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#b84208] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#963506] hover:shadow-md"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary-1 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-1 focus-visible:ring-offset-2"
             >
-              <ShoppingCart size={18} />
+              <ShoppingCart size={18} aria-hidden="true" />
               <span>Keranjang</span>
             </a>
           </nav>

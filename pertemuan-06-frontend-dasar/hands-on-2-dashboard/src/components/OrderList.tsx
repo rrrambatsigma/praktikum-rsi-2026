@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from 'react'
 import {
   Search,
@@ -51,20 +52,20 @@ export default function OrderList({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#f0e3db] bg-white shadow-[0_2px_8px_rgb(74_37_18_/_5%)]">
-      <div className="border-b border-[#f0e3db] p-4 sm:p-5">
+    <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+      <div className="border-b border-border p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-[var(--font-heading)] text-lg font-bold tracking-[-0.025em] text-[#29231f]">
+            <h2 className="font-heading text-lg font-bold tracking-[-0.025em] text-text">
               Daftar Pesanan
             </h2>
 
-            <p className="mt-1 font-[var(--font-body)] text-sm leading-6 text-[#796a61]">
+            <p className="mt-1 font-body text-sm leading-6 text-muted">
               Cari pesanan dan kelola statusnya.
             </p>
           </div>
 
-          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-[#fff0e6] px-3 py-2 font-[var(--font-body)] text-sm font-semibold text-[#963506]">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-soft px-3 py-2 font-body text-sm font-semibold text-primary-2">
             <ClipboardList size={16} aria-hidden="true" />
             {visibleOrders.length} dari {orders.length} pesanan
           </span>
@@ -73,15 +74,15 @@ export default function OrderList({
         <div className="mt-5">
           <label
             htmlFor="order-search"
-            className="mb-2 block font-[var(--font-body)] text-sm font-semibold text-[#29231f]"
+            className="mb-2 block font-body text-sm font-semibold text-text"
           >
             Cari pesanan
           </label>
 
-          <div className="flex min-h-12 items-center gap-2 rounded-xl border border-[#f0e3db] bg-[#fffdfa] px-3 transition-colors focus-within:border-[#b84208] focus-within:ring-2 focus-within:ring-[#b84208]/10">
+          <div className="flex min-h-12 items-center gap-2 rounded-xl border border-border bg-surface px-3 transition-colors focus-within:border-primary-1 focus-within:ring-2 focus-within:ring-primary-1/10">
             <Search
               size={18}
-              className="shrink-0 text-[#796a61]"
+              className="shrink-0 text-muted"
               aria-hidden="true"
             />
 
@@ -91,7 +92,7 @@ export default function OrderList({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Nomor pesanan, nama pelanggan, atau menu..."
-              className="min-h-11 w-full min-w-0 bg-transparent py-2 font-[var(--font-body)] text-sm text-[#29231f] outline-none placeholder:text-[#a3958d]"
+              className="min-h-11 w-full min-w-0 bg-transparent py-2 font-body text-sm text-text outline-none placeholder:text-muted-soft"
             />
 
             {search && (
@@ -99,7 +100,7 @@ export default function OrderList({
                 type="button"
                 onClick={() => setSearch('')}
                 aria-label="Hapus kata pencarian"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#796a61] transition-colors hover:bg-[#fff0e6] hover:text-[#963506]"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-1"
               >
                 <X size={17} aria-hidden="true" />
               </button>
@@ -108,13 +109,14 @@ export default function OrderList({
         </div>
 
         <div className="mt-5">
-          <div className="mb-3 flex items-center gap-2 font-[var(--font-body)] text-sm font-semibold text-[#29231f]">
+          <div className="mb-3 flex items-center gap-2 font-body text-sm font-semibold text-text">
             <SlidersHorizontal size={16} aria-hidden="true" />
             Filter status
           </div>
 
           <div
             className="flex flex-wrap gap-2"
+            role="group"
             aria-label="Filter status pesanan"
           >
             {filters.map((filter) => {
@@ -126,10 +128,10 @@ export default function OrderList({
                   type="button"
                   onClick={() => setActiveFilter(filter)}
                   aria-pressed={isActive}
-                  className={`rounded-full border px-4 py-2 font-[var(--font-body)] text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b84208] focus-visible:ring-offset-2 ${
+                  className={`rounded-full border px-4 py-2 font-body text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-1 focus-visible:ring-offset-2 ${
                     isActive
-                      ? 'border-[#b84208] bg-[#b84208] text-white'
-                      : 'border-[#f0e3db] bg-white text-[#796a61] hover:border-[#e7c8b5] hover:bg-[#fff8f4] hover:text-[#963506]'
+                      ? 'border-primary-1 bg-primary-1 text-surface'
+                      : 'border-border bg-surface text-muted hover:border-border-hover hover:bg-page hover:text-primary-2'
                   }`}
                 >
                   {filter}
@@ -152,17 +154,17 @@ export default function OrderList({
         </div>
       ) : (
         <div className="flex flex-col items-center px-5 py-12 text-center sm:py-16">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#fff0e6] text-[#b84208]">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary-1">
             <ClipboardList size={26} aria-hidden="true" />
           </span>
 
-          <h3 className="mt-4 font-[var(--font-heading)] text-base font-bold tracking-[-0.025em] text-[#29231f]">
+          <h3 className="mt-4 font-heading text-base font-bold tracking-[-0.025em] text-text">
             {orders.length === 0
               ? 'Belum ada pesanan'
               : 'Pesanan tidak ditemukan'}
           </h3>
 
-          <p className="mt-2 max-w-sm font-[var(--font-body)] text-sm leading-6 text-[#796a61]">
+          <p className="mt-2 max-w-sm font-body text-sm leading-6 text-muted">
             {orders.length === 0
               ? 'Pesanan yang masuk akan muncul di sini.'
               : 'Coba kata kunci lain atau pilih filter status yang berbeda.'}
@@ -172,7 +174,7 @@ export default function OrderList({
             <button
               type="button"
               onClick={resetFilters}
-              className="mt-5 rounded-xl bg-[#b84208] px-4 py-2.5 font-[var(--font-body)] text-sm font-semibold text-white transition-colors hover:bg-[#963506] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b84208] focus-visible:ring-offset-2"
+              className="mt-5 rounded-xl bg-primary-1 px-4 py-2.5 font-body text-sm font-semibold text-surface transition-colors hover:bg-primary-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-1 focus-visible:ring-offset-2"
             >
               Reset pencarian dan filter
             </button>

@@ -1,35 +1,42 @@
-
 import { Banknote, CheckCircle2, Utensils } from 'lucide-react'
 
 function Footer() {
   return (
-    <footer className="mt-8 border-t border-orange-950/5 bg-[#fcf1e9]">
+    <footer className="mt-8 border-t border-border bg-primary-soft">
       <div className="mx-auto flex max-w-[1600px] flex-col justify-between gap-5 px-5 py-6 lg:flex-row lg:items-center lg:px-7">
+        {/* Identitas Maem Bolo */}
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-200 text-green-800">
-            <Utensils className="ui-icon" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-available-bg text-available-text">
+            <Utensils className="ui-icon" aria-hidden="true" />
           </span>
 
           <div>
-            <p className="font-bold text-stone-900">Maem Bolo</p>
-            <p className="text-xs text-stone-600">
+            <p className="font-bold text-text">Maem Bolo</p>
+            <p className="text-xs text-muted">
               Layanan resmi katalog santapan mahasiswa FATISDA.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-stone-600">
+        {/* Informasi layanan */}
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
           <span className="inline-flex items-center gap-1">
-            <CheckCircle2 className="ui-icon-sm text-green-700" />
-            Higienis & Terkurasi
+            <CheckCircle2
+              className="ui-icon-sm text-success"
+              aria-hidden="true"
+            />
+            Higienis &amp; Terkurasi
           </span>
 
           <span className="inline-flex items-center gap-1">
-            <Banknote className="ui-icon-sm text-green-700" />
+            <Banknote
+              className="ui-icon-sm text-success"
+              aria-hidden="true"
+            />
             Harga Ramah Kantong
           </span>
 
-          <span className="text-stone-500">
+          <span className="text-muted">
             © 2026 Kantin Kampus
           </span>
         </div>

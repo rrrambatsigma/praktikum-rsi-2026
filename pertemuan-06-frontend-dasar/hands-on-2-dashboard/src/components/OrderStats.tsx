@@ -1,3 +1,4 @@
+
 import {
   CheckCircle2,
   ClipboardList,
@@ -17,32 +18,32 @@ export default function OrderStats({ orders }: OrderStatsProps) {
       value: orders.length,
       description: 'Semua pesanan masuk',
       icon: ClipboardList,
-      color: 'text-[#b84208]',
-      background: 'bg-[#fff0e6]',
+      color: 'text-primary-1',
+      background: 'bg-primary-soft',
     },
     {
       label: 'Menunggu',
       value: orders.filter((order) => order.status === 'Menunggu').length,
       description: 'Perlu segera ditangani',
       icon: Clock3,
-      color: 'text-[#956000]',
-      background: 'bg-[#fff3d6]',
+      color: 'text-warning',
+      background: 'bg-warning-bg',
     },
     {
       label: 'Diproses',
       value: orders.filter((order) => order.status === 'Diproses').length,
       description: 'Sedang disiapkan',
       icon: CookingPot,
-      color: 'text-[#2859a6]',
-      background: 'bg-[#edf2ff]',
+      color: 'text-info',
+      background: 'bg-info-bg',
     },
     {
       label: 'Selesai',
       value: orders.filter((order) => order.status === 'Selesai').length,
       description: 'Pesanan telah selesai',
       icon: CheckCircle2,
-      color: 'text-[#167443]',
-      background: 'bg-[#e7f7ed]',
+      color: 'text-success',
+      background: 'bg-success-bg',
     },
   ]
 
@@ -62,15 +63,15 @@ export default function OrderStats({ orders }: OrderStatsProps) {
         }) => (
           <article
             key={label}
-            className="rounded-2xl border border-[#f0e3db] bg-white p-5 shadow-[0_2px_8px_rgb(74_37_18_/_5%)] transition-colors duration-200 hover:border-[#e7c8b5]"
+            className="rounded-2xl border border-border bg-surface p-5 shadow-card transition-colors duration-200 hover:border-border-hover"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="font-[var(--font-body)] text-sm font-medium text-[#796a61]">
+                <h3 className="font-body text-sm font-medium text-muted">
                   {label}
                 </h3>
 
-                <p className="mt-3 font-[var(--font-heading)] text-3xl font-bold tracking-[-0.025em] text-[#29231f]">
+                <p className="mt-3 font-heading text-3xl font-bold tracking-[-0.025em] text-text">
                   {value}
                 </p>
               </div>
@@ -82,7 +83,7 @@ export default function OrderStats({ orders }: OrderStatsProps) {
               </span>
             </div>
 
-            <p className="mt-4 border-t border-[#f0e3db] pt-3 font-[var(--font-body)] text-xs leading-5 text-[#796a61]">
+            <p className="mt-4 border-t border-border pt-3 font-body text-xs leading-5 text-muted">
               {description}
             </p>
           </article>

@@ -1,49 +1,107 @@
-
 @import "tailwindcss";
 
+/* ========================================
+   THEME — DESIGN TOKENS MAEM BOLO
+   ======================================== */
+
+@theme {
+  /* Primary brand */
+  --color-primary-1: #b84208;
+  --color-primary-2: #963506;
+
+  /* Background dan surface */
+  --color-page: #fff8f4;
+  --color-surface: #ffffff;
+  --color-primary-soft: #fff0e6;
+
+  /* Text */
+  --color-text: #29231f;
+  --color-muted: #796a61;
+  --color-muted-soft: #9b8b80;
+
+  /* Border */
+  --color-border: #f0e3db;
+  --color-border-hover: #ead0bf;
+
+  /* Status umum */
+  --color-success: #167443;
+  --color-danger: #b93838;
+
+  /* Status ketersediaan menu */
+  --color-available-bg: #dcfce7;
+  --color-available-text: #166534;
+  --color-unavailable-bg: #fee2e2;
+  --color-unavailable-text: #b91c1c;
+
+  /* Elemen pendukung kartu menu */
+  --color-menu-image-bg: #fff0e6;
+  --color-menu-image-end: #fffbeb;
+  --color-rating: #963506;
+  --color-price-disabled: #a8a29e;
+  --color-disabled-bg: #e7e5e4;
+  --color-disabled-text: #78716c;
+  --color-category-text: #29231f;
+
+  /* Typography */
+  --font-heading: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  /* Shadow */
+  --shadow-card: 0 2px 8px rgb(74 37 18 / 5%);
+  --shadow-card-hover: 0 10px 26px rgb(74 37 18 / 9%);
+
+  /* Radius */
+  --radius-card: 1rem;
+}
+
+/* ========================================
+   GLOBAL VARIABLES
+   ======================================== */
+
 :root {
-  font-family: "Inter", sans-serif;
-  color: #29231f;
-  background: #fff8f4;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-page);
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  --font-heading: "Plus Jakarta Sans", sans-serif;
-  --font-body: "Inter", sans-serif;
-
-  --color-page: #fff8f4;
-  --color-surface: #ffffff;
-  --color-primary: #b84208;
-  --color-primary-hover: #963506;
-  --color-text: #29231f;
-  --color-muted: #796a61;
-  --color-border: #f0e3db;
-  --color-success: #167443;
-  --color-danger: #b93838;
-
-  --radius-card: 1rem;
-  --shadow-card: 0 2px 8px rgb(74 37 18 / 5%);
 }
 
-* {
+/* ========================================
+   RESET & BASE STYLES
+   ======================================== */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
   min-width: 320px;
+  min-height: 100%;
   scroll-behavior: smooth;
+  background: var(--color-page);
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+
   font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.6;
+
+  color: var(--color-text);
+  background: var(--color-page);
 }
+
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
 
 body,
 button,
@@ -54,7 +112,9 @@ select {
 }
 
 button,
-input {
+input,
+textarea,
+select {
   font-size: inherit;
 }
 
@@ -66,17 +126,31 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* ========================================
+   ACCESSIBILITY & FOCUS
+   ======================================== */
+
 button:focus-visible,
 a:focus-visible,
-input:focus-visible {
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
   outline: 3px solid rgb(184 66 8 / 35%);
   outline-offset: 3px;
 }
+
+/* ========================================
+   IMAGES
+   ======================================== */
 
 img {
   display: block;
   max-width: 100%;
 }
+
+/* ========================================
+   HEADINGS & TEXT
+   ======================================== */
 
 h1,
 h2,
@@ -90,6 +164,7 @@ h4 {
 h1,
 h2,
 h3,
+h4,
 p {
   margin-top: 0;
 }
@@ -99,7 +174,26 @@ a {
   text-decoration: none;
 }
 
+/* ========================================
+   SELECTION
+   ======================================== */
+
 ::selection {
-  color: #fff;
-  background: #b84208;
+  color: var(--color-surface);
+  background: var(--color-primary-1);
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,32 +1,80 @@
 @import "tailwindcss";
 
+/* ========================================
+   THEME — DESIGN TOKENS MAEM BOLO
+   Tailwind CSS v4
+   ======================================== */
+
+@theme {
+  /* Brand */
+  --color-primary-1: #b84208;
+  --color-primary-2: #963506;
+
+  /* Background */
+  --color-page: #fff8f4;
+  --color-surface: #ffffff;
+  --color-primary-soft: #fff0e6;
+
+  /* Typography colors */
+  --color-text: #29231f;
+  --color-muted: #796a61;
+  --color-muted-soft: #a3958d;
+
+  /* Borders */
+  --color-border: #f0e3db;
+  --color-border-hover: #ead0bf;
+
+  /* Status */
+  --color-success: #167443;
+  --color-danger: #b93838;
+  --color-warning: #a16207;
+  --color-info: #1d4ed8;
+
+  /* Status backgrounds */
+  --color-success-bg: #dcfce7;
+  --color-danger-bg: #fee2e2;
+  --color-warning-bg: #fef3c7;
+  --color-info-bg: #dbeafe;
+
+  /* Disabled elements */
+  --color-disabled-bg: #e7e5e4;
+  --color-disabled-text: #78716c;
+
+  /* Typography */
+  --font-heading: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgb(74 37 18 / 5%);
+  --shadow-card-hover: 0 10px 26px rgb(74 37 18 / 9%);
+  --shadow-dropdown: 0 8px 24px rgb(41 35 31 / 10%);
+
+  /* Radius */
+  --radius-card: 1rem;
+}
+
+/* ========================================
+   GLOBAL VARIABLES
+   ======================================== */
+
 :root {
-  font-family: "Inter", sans-serif;
-  color: #29231f;
-  background: #fff8f4;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-page);
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  --font-heading: "Plus Jakarta Sans", sans-serif;
-  --font-body: "Inter", sans-serif;
-
-  --color-page: #fff8f4;
-  --color-surface: #ffffff;
-  --color-primary: #b84208;
-  --color-primary-hover: #963506;
-  --color-text: #29231f;
-  --color-muted: #796a61;
-  --color-border: #f0e3db;
-  --color-success: #167443;
-  --color-danger: #b93838;
-
-  --radius-card: 1rem;
-  --shadow-card: 0 2px 8px rgb(74 37 18 / 5%);
 }
 
-* {
+/* ========================================
+   RESET & BASE STYLES
+   ======================================== */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -41,12 +89,18 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+
   font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.6;
+
   color: var(--color-text);
   background: var(--color-page);
 }
+
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
 
 body,
 button,
@@ -77,6 +131,10 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ========================================
+   ACCESSIBILITY & FOCUS
+   ======================================== */
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -86,10 +144,18 @@ select:focus-visible {
   outline-offset: 3px;
 }
 
+/* ========================================
+   IMAGES
+   ======================================== */
+
 img {
   display: block;
   max-width: 100%;
 }
+
+/* ========================================
+   HEADINGS & LINKS
+   ======================================== */
 
 h1,
 h2,
@@ -113,15 +179,27 @@ a {
   text-decoration: none;
 }
 
+/* ========================================
+   INPUT PLACEHOLDERS
+   ======================================== */
+
 input::placeholder,
 textarea::placeholder {
-  color: #a3958d;
+  color: var(--color-muted-soft);
 }
 
+/* ========================================
+   TEXT SELECTION
+   ======================================== */
+
 ::selection {
-  color: #fff;
-  background: #b84208;
+  color: var(--color-surface);
+  background: var(--color-primary-1);
 }
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
 
 @media (prefers-reduced-motion: reduce) {
   *,
