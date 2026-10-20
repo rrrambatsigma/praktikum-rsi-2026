@@ -1,18 +1,11 @@
 import { useState } from 'react'
 import { ShoppingBasket, Ban, Star } from 'lucide-react'
 import type { MenuItem } from '../data/menu'
+import { formatRupiah } from '../lib/format'
 
 interface MenuCardProps {
   menu: MenuItem
   onSelect?: (menu: MenuItem) => void
-}
-
-export function formatRupiah(price: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(price)
 }
 
 function MenuCard({ menu, onSelect }: MenuCardProps) {
@@ -20,7 +13,7 @@ function MenuCard({ menu, onSelect }: MenuCardProps) {
 
   return (
     <article
-      className={`menu-card group flex h-full flex-col overflow-hidden bg-surface ${
+      className={`group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-card transition hover:border-border-hover hover:shadow-card-hover ${
         !menu.available ? 'opacity-75' : ''
       }`}
     >
@@ -82,7 +75,7 @@ function MenuCard({ menu, onSelect }: MenuCardProps) {
           {menu.rating !== undefined && menu.available && (
             <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-rating">
               <Star
-                className="ui-icon-sm fill-current"
+                className="size-[15px] shrink-0 fill-current"
                 aria-hidden="true"
               />
               {menu.rating.toFixed(1)}
@@ -96,7 +89,7 @@ function MenuCard({ menu, onSelect }: MenuCardProps) {
           )}
         </div>
 
-        <h2 className="menu-title mt-2 text-lg font-bold leading-snug text-text">
+        <h2 className="font-heading mt-2 text-lg font-bold leading-snug text-text">
           {menu.name}
         </h2>
 
@@ -112,7 +105,7 @@ function MenuCard({ menu, onSelect }: MenuCardProps) {
             </span>
 
             <span
-              className={`menu-price text-xl font-extrabold tracking-tight ${
+              className={`font-heading text-xl font-extrabold tracking-tight ${
                 menu.available
                   ? 'text-primary-2'
                   : 'text-price-disabled line-through'
@@ -140,7 +133,7 @@ function MenuCard({ menu, onSelect }: MenuCardProps) {
             {menu.available ? (
               <>
                 <ShoppingBasket
-                  className="ui-icon"
+                  className="size-[18px] shrink-0"
                   aria-hidden="true"
                 />
                 Pilih Menu
@@ -148,7 +141,7 @@ function MenuCard({ menu, onSelect }: MenuCardProps) {
             ) : (
               <>
                 <Ban
-                  className="ui-icon"
+                  className="size-[18px] shrink-0"
                   aria-hidden="true"
                 />
                 Habis

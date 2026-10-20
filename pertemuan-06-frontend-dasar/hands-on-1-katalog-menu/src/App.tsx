@@ -110,7 +110,7 @@ function App() {
   return (
     <div
       id="top"
-      className="min-h-screen bg-[#fff8f4] text-[#29231f]"
+      className="min-h-screen bg-page text-text"
     >
       <Header
         search={search}
@@ -120,7 +120,7 @@ function App() {
       <main className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
         {/* Judul halaman */}
         <section className="mb-6">
-          <p className="text-sm font-semibold text-[#b84208]">
+          <p className="text-sm font-semibold text-primary-1">
             MAEM BOLO
           </p>
 
@@ -130,18 +130,18 @@ function App() {
                 Mau makan apa hari ini?
               </h1>
 
-              <p className="mt-2 text-sm text-[#796a61]">
+              <p className="mt-2 text-sm text-muted">
                 Temukan makanan dan minuman favoritmu.
               </p>
             </div>
 
             <a
               href="#keranjang"
-              className="inline-flex items-center gap-2 rounded-xl border border-[#f0e3db] bg-white px-4 py-2.5 text-sm font-bold text-[#b84208] transition hover:bg-orange-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-bold text-primary-1 transition hover:bg-primary-soft"
             >
               <ShoppingCart size={18} />
               Keranjang
-              <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs">
+              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs">
                 {totalCartItems}
               </span>
             </a>
@@ -167,8 +167,8 @@ function App() {
                     aria-pressed={isActive}
                     className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                       isActive
-                        ? 'bg-[#b84208] text-white'
-                        : 'border border-[#f0e3db] bg-white text-[#796a61] hover:border-orange-300 hover:text-[#b84208]'
+                        ? 'bg-primary-1 text-white'
+                        : 'border border-border bg-surface text-muted hover:border-border-hover hover:text-primary-1'
                     }`}
                   >
                     {category}
@@ -185,7 +185,7 @@ function App() {
                   : `Menu ${activeCategory}`}
               </h2>
 
-              <span className="text-sm text-[#796a61]">
+              <span className="text-sm text-muted">
                 {filteredMenus.length} menu
               </span>
             </div>
@@ -201,12 +201,12 @@ function App() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-[#f0e3db] bg-white px-5 py-14 text-center">
+              <div className="rounded-2xl border border-border bg-surface px-5 py-14 text-center">
                 <p className="font-bold">
                   Menu tidak ditemukan
                 </p>
 
-                <p className="mt-2 text-sm text-[#796a61]">
+                <p className="mt-2 text-sm text-muted">
                   Coba kata kunci lain atau pilih kategori berbeda.
                 </p>
 
@@ -216,7 +216,7 @@ function App() {
                     setSearch('')
                     setActiveCategory('Semua')
                   }}
-                  className="mt-4 rounded-xl bg-[#b84208] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#963506]"
+                  className="mt-4 rounded-xl bg-primary-1 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-2"
                 >
                   Reset Pencarian
                 </button>

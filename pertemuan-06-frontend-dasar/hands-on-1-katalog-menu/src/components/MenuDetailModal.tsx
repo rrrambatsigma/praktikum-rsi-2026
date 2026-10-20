@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Minus, Plus, X } from 'lucide-react'
 import type { MenuItem } from '../data/menu'
-import { formatRupiah } from './MenuCard'
+import { formatRupiah } from '../lib/format'
 
 interface MenuDetailModalProps {
   menu: MenuItem

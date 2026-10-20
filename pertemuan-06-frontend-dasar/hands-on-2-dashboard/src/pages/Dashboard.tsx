@@ -6,11 +6,7 @@ import OrderStats from '../components/OrderStats'
 import OrderList from '../components/OrderList'
 import { initialOrders, type Order, type OrderStatus } from '../data/orders'
 
-interface DashboardProps {
-  onLogout: () => void
-}
-
-export default function Dashboard({ onLogout }: DashboardProps) {
+export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>(initialOrders)
 
   function changeOrderStatus(orderId: string, status: OrderStatus) {
@@ -27,7 +23,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-page font-body text-text">
-      <DashboardHeader onLogout={onLogout} />
+      <DashboardHeader />
 
       <main className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
         <section className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
