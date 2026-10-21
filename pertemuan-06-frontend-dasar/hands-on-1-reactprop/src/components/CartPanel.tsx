@@ -1,6 +1,6 @@
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import type { MenuItem } from '../data/menu'
-import { formatRupiah } from './MenuCard'
+import { formatRupiah } from '../lib/format'
 
 export interface CartItem {
   menu: MenuItem

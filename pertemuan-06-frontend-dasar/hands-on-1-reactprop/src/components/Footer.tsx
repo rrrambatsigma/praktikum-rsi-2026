@@ -7,7 +7,7 @@ function Footer() {
         {/* Identitas Maem Bolo */}
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-available-bg text-available-text">
-            <Utensils className="ui-icon" aria-hidden="true" />
+            <Utensils className="size-[18px] shrink-0" aria-hidden="true" />
           </span>
 
           <div>
@@ -22,7 +22,7 @@ function Footer() {
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
           <span className="inline-flex items-center gap-1">
             <CheckCircle2
-              className="ui-icon-sm text-success"
+              className="size-[15px] shrink-0 text-success"
               aria-hidden="true"
             />
             Higienis &amp; Terkurasi
@@ -30,7 +30,7 @@ function Footer() {
 
           <span className="inline-flex items-center gap-1">
             <Banknote
-              className="ui-icon-sm text-success"
+              className="size-[15px] shrink-0 text-success"
               aria-hidden="true"
             />
             Harga Ramah Kantong
