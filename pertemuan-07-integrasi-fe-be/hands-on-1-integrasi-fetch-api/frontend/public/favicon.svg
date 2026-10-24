@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Maem Bolo">
+  <rect width="64" height="64" rx="14" fill="#B94716" />
+  <path d="M18 31h28c0 8.8-6.3 16-14 16s-14-7.2-14-16Z" fill="#FFF8F3" />
+  <path d="M15 31h34" stroke="#FFF8F3" stroke-width="4" stroke-linecap="round" />
+  <path d="M23 23c0-3 3-3 3-6M32 22c0-3 3-3 3-6M41 23c0-3 3-3 3-6" stroke="#FFF8F3" stroke-width="3" stroke-linecap="round" />
+  <path d="M26 51h12" stroke="#FFF8F3" stroke-width="4" stroke-linecap="round" />
+</svg>
