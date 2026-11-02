@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { getUser } from '../middlewares/auth.ts';
 import { parseCreateMenuInput } from '../schemas/menuSchema.ts';
 import { MenuService } from '../services/menuService.ts';
 
@@ -12,7 +13,8 @@ export class MenuController {
 
   createMenu = async (req: Request, res: Response): Promise<void> => {
     const input = parseCreateMenuInput(req.body);
-    const data = await this.menuService.createMenu(input);
+    const user = getUser(req);
+    const data = await this.menuService.createMenu(input, user);
 
     res.status(201).json({
       status: 'success',

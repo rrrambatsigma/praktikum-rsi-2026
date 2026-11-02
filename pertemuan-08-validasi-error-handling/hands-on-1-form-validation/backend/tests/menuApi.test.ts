@@ -8,6 +8,8 @@ import { closePool, getPool } from '../src/db/pool.ts';
 let server: Server;
 let baseUrl = '';
 let ownerCookie = '';
+let ownerId = 0;
+let foreignStallId = 0;
 const createdMenuIds: number[] = [];
 
 // Akun ini benar-benar ada di database setelah db/03-auth-seed.sql dijalankan.
@@ -92,11 +94,38 @@ before(async () => {
     );
   }
 
+  const loginBody = (await response.json()) as { data: { id: number } };
+  ownerId = loginBody.data.id;
   ownerCookie = readCookie(response);
 
   if (!ownerCookie) {
     throw new Error('Cookie sesi tidak diterima dari endpoint login.');
   }
+
+  // Form tambah menu memakai warung milik owner ini, bukan id yang di-hardcode.
+  const myStallsResponse = await request('/api/stalls/mine', { cookie: ownerCookie });
+  const myStallsBody = (await myStallsResponse.json()) as {
+    data: { id: number; ownerId: number }[];
+  };
+
+  if (myStallsBody.data.length === 0) {
+    throw new Error('Owner tidak memiliki warung. Jalankan db/02-menu-seed.sql.');
+  }
+
+  validPayload.stallId = myStallsBody.data[0].id;
+
+  // Cari warung milik owner lain untuk menguji object-level authorization.
+  const stallsResponse = await request('/api/stalls');
+  const stallsBody = (await stallsResponse.json()) as {
+    data: { id: number; ownerId: number }[];
+  };
+  const foreign = stallsBody.data.find((stall) => stall.ownerId !== ownerId);
+
+  if (!foreign) {
+    throw new Error('Tidak ada warung milik owner lain untuk menguji RBAC.');
+  }
+
+  foreignStallId = foreign.id;
 });
 
 after(async () => {
@@ -133,17 +162,39 @@ test('GET /health mengembalikan 200 dan status database', async () => {
   assert.equal(body.database.ok, 1);
 });
 
-test('GET /api/stalls mengembalikan daftar warung', async () => {
+test('GET /api/stalls mengembalikan daftar warung beserta pemiliknya', async () => {
   const response = await request('/api/stalls');
   const body = (await response.json()) as {
     status: string;
-    data: unknown[];
+    data: { id: number; ownerId: number }[];
   };
 
   assert.equal(response.status, 200);
   assert.equal(body.status, 'success');
   assert.ok(Array.isArray(body.data));
   assert.ok(body.data.length > 0);
+  assert.ok(body.data.every((stall) => typeof stall.ownerId === 'number'));
+});
+
+test('GET /api/stalls/mine tanpa sesi mengembalikan 401', async () => {
+  const response = await request('/api/stalls/mine');
+  const body = (await response.json()) as { code: string };
+
+  assert.equal(response.status, 401);
+  assert.equal(body.code, 'UNAUTHORIZED');
+});
+
+test('GET /api/stalls/mine hanya mengembalikan warung milik owner', async () => {
+  const response = await request('/api/stalls/mine', { cookie: ownerCookie });
+  const body = (await response.json()) as {
+    status: string;
+    data: { id: number; ownerId: number }[];
+  };
+
+  assert.equal(response.status, 200);
+  assert.equal(body.status, 'success');
+  assert.ok(body.data.length > 0);
+  assert.ok(body.data.every((stall) => stall.ownerId === ownerId));
 });
 
 test('GET /api/menu mengembalikan daftar menu', async () => {
@@ -287,6 +338,39 @@ test('POST /api/menu valid mengembalikan 201 dan menyimpan data', async () => {
     .query<{ id: number }>('SELECT id FROM dbo.MENU_ITEMS WHERE id = @id');
 
   assert.equal(stored.recordset[0]?.id, body.data.id);
+});
+
+test('POST /api/menu ke warung milik owner lain ditolak 403 dan tidak menyimpan', async () => {
+  const name = `${validPayload.name}-foreign`;
+
+  const response = await postJson('/api/menu', {
+    ...validPayload,
+    name,
+    stallId: foreignStallId,
+  });
+  const body = (await response.json()) as {
+    status: string;
+    code: string;
+    message: string;
+    errors?: { field: string; message: string }[];
+  };
+
+  assert.equal(response.status, 403);
+  assert.equal(body.status, 'fail');
+  assert.equal(body.code, 'STALL_FORBIDDEN');
+  assert.equal(
+    body.message,
+    'Anda hanya dapat menambah menu pada warung milik Anda.',
+  );
+  assert.ok(body.errors?.some((detail) => detail.field === 'stallId'));
+
+  const pool = await getPool();
+  const stored = await pool
+    .request()
+    .input('name', name)
+    .query<{ id: number }>('SELECT id FROM dbo.MENU_ITEMS WHERE name = @name');
+
+  assert.equal(stored.recordset.length, 0, 'Menu warung orang lain tidak boleh tersimpan');
 });
 
 test('POST body kosong mengembalikan 400 dengan field errors', async () => {

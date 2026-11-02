@@ -18,7 +18,7 @@ Setelah menyelesaikan hands-on ini, mahasiswa diharapkan mampu:
 3. Menjelaskan perbedaan validasi panjang password dan autentikasi kredensial.
 4. Memakai autentikasi JWT dalam cookie `httpOnly` yang sudah tersedia di repo.
 5. Melindungi dashboard dengan `AuthProvider` + `ProtectedRoute`.
-6. Melindungi endpoint tambah menu dengan middleware `authenticate` + `authorize('owner')`.
+6. Melindungi endpoint tambah menu dengan middleware `authenticate` + `authorize('owner')`, lalu memeriksa kepemilikan warung (object-level authorization).
 7. Menampilkan toast sukses/gagal yang hanya muncul setelah hasil backend diketahui.
 8. Memetakan error API ke field form, pesan autentikasi, atau pesan koneksi.
 9. Membedakan status `400`, `401`, `403`, `404`, `409`, dan `500`.
@@ -31,6 +31,7 @@ Setelah menyelesaikan hands-on ini, mahasiswa diharapkan mampu:
 - Fetch API dengan `credentials: 'include'`.
 - Autentikasi JWT HS256 di cookie `httpOnly` + `bcryptjs`.
 - Middleware `authenticate` dan `authorize`.
+- Object-level authorization: memeriksa `STALLS.owner_id` terhadap user yang login.
 - Validasi skema dengan `zod` di backend.
 - Pemisahan lapisan `routes → controllers → services → repositories`.
 - Penanganan error terpusat dan kontrak respons error.
@@ -116,6 +117,7 @@ pertemuan-08-validasi-error-handling/
 │  │  │  ├─ services/
 │  │  │  │  ├─ authService.ts
 │  │  │  │  ├─ tokenService.ts
+│  │  │  │  ├─ menuOwnership.ts      # aturan object-level authorization
 │  │  │  │  └─ menuService.ts
 │  │  │  ├─ types/               # AuthUser, UserRole, augmentasi Express.Request
 │  │  │  ├─ utils/cookie.ts       # setAuthCookie + clearAuthCookie
@@ -123,6 +125,7 @@ pertemuan-08-validasi-error-handling/
 │  │  │  └─ index.ts
 │  │  ├─ tests/
 │  │  │  ├─ authSchema.test.ts
+│  │  │  ├─ menuOwnership.test.ts
 │  │  │  ├─ menuSchema.test.ts
 │  │  │  └─ menuApi.test.ts
 │  │  ├─ .env.example
@@ -131,15 +134,15 @@ pertemuan-08-validasi-error-handling/
 │  └─ frontend/
 │     ├─ src/
 │     │  ├─ components/
-│     │  │  ├─ Alert.tsx
 │     │  │  ├─ AppFooter.tsx
 │     │  │  ├─ AppHeader.tsx
+│     │  │  ├─ AuthShell.tsx
 │     │  │  ├─ FieldError.tsx
 │     │  │  ├─ MenuForm.tsx
 │     │  │  ├─ MenuList.tsx
 │     │  │  ├─ ProtectedRoute.tsx
-│     │  │  ├─ StatePanel.tsx
-│     │  │  └─ Toast.tsx
+│     │  │  ├─ Toast.tsx
+│     │  │  └─ ui.tsx
 │     │  ├─ context/
 │     │  │  ├─ AuthContext.tsx
 │     │  │  └─ ToastContext.tsx
@@ -148,6 +151,7 @@ pertemuan-08-validasi-error-handling/
 │     │  ├─ lib/
 │     │  │  ├─ api.ts
 │     │  │  ├─ format.ts
+│     │  │  ├─ styles.ts
 │     │  │  └─ validation.ts
 │     │  ├─ pages/
 │     │  │  ├─ DashboardPage.tsx
@@ -233,6 +237,9 @@ POST /api/menu  (cookie sesi ikut terkirim)
 [Backend] stallRepository.findById()    ← warung harus ada (404)
         │ ada
         ▼
+[Backend] canManageStall()              ← owner_id harus milik user (403 STALL_FORBIDDEN)
+        │ cocok
+        ▼
 [Backend] menuRepository.create()       ← INSERT parameterized
         │
         ▼
@@ -278,9 +285,10 @@ sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\02-menu
 Seed melakukan:
 
 1. Backfill kategori menu lama dari kategori warung.
-2. Menambah warung `Gorengan Bu Tini` bila belum ada.
-3. Menambah empat menu camilan, satu di antaranya `is_available = 0`.
-4. Menghapus duplikat seed bila script dijalankan ulang.
+2. Menambah warung `Gorengan Bu Tini` bila belum ada, dengan `owner_id` eksplisit milik `tini@kantin.test`.
+3. Memperbaiki data lama bila warung tersebut sebelumnya menempel ke Owner lain.
+4. Menambah empat menu camilan, satu di antaranya `is_available = 0`.
+5. Menghapus duplikat seed bila script dijalankan ulang.
 
 ### 7.4 Seed akun Owner
 
@@ -376,7 +384,7 @@ Invoke-RestMethod -Uri "http://localhost:3001/health"
 | `npm run dev` | Menjalankan server dengan watch mode |
 | `npm start` | Menjalankan server tanpa watch |
 | `npm run typecheck` | Cek tipe TypeScript |
-| `npm run test:unit` | Unit test skema menu + login |
+| `npm run test:unit` | Unit test skema menu, login, dan ownership |
 | `npm run test:integration` | Integration test dengan database nyata |
 
 ## 9. Setup Frontend
@@ -426,7 +434,8 @@ Bila variabel ini tidak diisi, frontend memakai `http://localhost:3001/api` seba
 | Penyimpanan token | Cookie `kantin_session`, `httpOnly`, `SameSite=Lax`, `Secure` hanya di production |
 | Umur sesi | Mengikuti `JWT_EXPIRES_IN` (default `1d`) |
 | Pemeriksaan sesi | `GET /api/auth/me` saat aplikasi dimuat |
-| Proteksi backend | `authenticate` lalu `authorize('owner')` pada `POST /api/menu` |
+| Proteksi backend | `authenticate` lalu `authorize('owner')` pada `POST /api/menu` dan `GET /api/stalls/mine` |
+| Kepemilikan warung | `canManageStall(stall.ownerId, user)` di `menuService.createMenu()` |
 | Logout | `POST /api/auth/logout` menghapus cookie |
 
 Frontend **tidak menyimpan token di localStorage**. `AuthProvider` hanya menyimpan data user di memori dan memverifikasi sesi lewat `/auth/me`. Cookie `httpOnly` tidak dapat dibaca JavaScript.
@@ -437,9 +446,12 @@ Frontend **tidak menyimpan token di localStorage**. `AuthProvider` hanya menyimp
 |---|---|---|
 | `401 UNAUTHORIZED` | Belum login, cookie tidak ada, atau token kedaluwarsa | Toast sesi berakhir + arahkan ke `/login` |
 | `403 FORBIDDEN` | Login valid tetapi role bukan `owner` | Toast "Akun ini bukan Owner." dan tetap di `/login` |
+| `403 STALL_FORBIDDEN` | Role Owner valid, tetapi `stallId` bukan warung miliknya | Field `stallId` ditandai + toast "Warung bukan milik Anda." |
 | `200` pada `/auth/me` | Sesi valid | Dashboard boleh dibuka |
 
-`GET /api/menu` dan `GET /api/stalls` tetap publik agar daftar menu mudah diamati saat praktikum. Yang dilindungi adalah operasi tulis `POST /api/menu`.
+`GET /api/menu` dan `GET /api/stalls` tetap publik agar daftar menu mudah diamati saat praktikum. Yang dilindungi adalah operasi tulis `POST /api/menu` dan endpoint `GET /api/stalls/mine`.
+
+Form tambah menu memakai `GET /api/stalls/mine`, bukan `GET /api/stalls`. Jadi frontend tidak pernah menawarkan warung milik Owner lain. Backend tetap memeriksa ulang `stallId` karena request bisa dimodifikasi lewat DevTools atau curl.
 
 Akun dengan role `admin` atau `customer` boleh memiliki kredensial yang valid, tetapi **tidak diberi sesi** oleh endpoint login Hands-on 1. Responsnya `403 FORBIDDEN` karena aplikasi ini khusus Owner; middleware `authorize('owner')` tetap menjadi lapisan pertahanan kedua di endpoint menu.
 
@@ -454,8 +466,9 @@ Base URL: `http://localhost:3001`
 | `GET` | `/api/auth/me` | Sesi | `200` | Data user yang sedang login |
 | `POST` | `/api/auth/logout` | Publik | `200` | Hapus cookie sesi |
 | `GET` | `/api/stalls` | Publik | `200` | Daftar warung |
+| `GET` | `/api/stalls/mine` | Owner | `200` | Warung milik Owner yang login |
 | `GET` | `/api/menu` | Publik | `200` | Daftar menu beserta warung |
-| `POST` | `/api/menu` | Owner | `201` | Tambah menu |
+| `POST` | `/api/menu` | Owner + pemilik warung | `201` | Tambah menu |
 | `POST` | `/api/dev/force-error` | Publik | `500` | Simulasi error server (non-production) |
 
 ### 11.1 Login berhasil
@@ -590,9 +603,30 @@ Role selain Owner mendapat `403`:
 {
   "status": "fail",
   "code": "FORBIDDEN",
-  "message": "Hanya pemilik warung yang boleh menambah menu."
+  "message": "Anda tidak memiliki akses ke operasi ini."
 }
 ```
+
+Jika role sudah Owner tetapi `stallId` menunjuk warung milik Owner lain, backend menolak dengan `403 STALL_FORBIDDEN`:
+
+```json
+{
+  "status": "fail",
+  "code": "STALL_FORBIDDEN",
+  "message": "Anda hanya dapat menambah menu pada warung milik Anda.",
+  "errors": [
+    { "field": "stallId", "message": "Warung ini bukan milik akun Anda." }
+  ]
+}
+```
+
+Cek daftar warung yang boleh dikelola:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3001/api/stalls/mine" -WebSession $session
+```
+
+Endpoint ini hanya mengembalikan baris `STALLS` dengan `owner_id` sama dengan `sub` token. Tanpa cookie sesi hasilnya `401`.
 
 ### 11.6 Payload menu tidak valid
 
@@ -665,7 +699,7 @@ Catatan:
 
 | Field | Aturan | Pesan contoh |
 |---|---|---|
-| Warung | Wajib dipilih dan harus ada di database | `Pilih warung terlebih dahulu.` |
+| Warung | Wajib dipilih, harus ada di database, dan harus milik Owner yang login | `Pilih warung terlebih dahulu.` |
 | Nama | Wajib, `trim`, 2–100 karakter, tidak boleh hanya spasi | `Nama menu wajib diisi.` |
 | Kategori | Wajib salah satu dari `makanan`, `minuman`, `camilan` | `Pilih kategori menu.` |
 | Harga | Wajib, hanya digit, bilangan bulat, > 0, maks 1.000.000 | `Harga harus lebih dari 0.` |
@@ -681,6 +715,7 @@ Ketentuan tambahan:
 - Form tidak direset jika request gagal; daftar menu tidak bertambah jika backend menolak.
 - Backend memakai `.strict()`, sehingga field asing ditolak dengan `field: "body"`.
 - `stallId`, `price`, dan `isAvailable` harus bertipe benar. `"price": "5000"` (string) ditolak.
+- `stallId` yang valid secara format tetapi bukan milik Owner tetap ditolak `403 STALL_FORBIDDEN`; validasi skema saja tidak cukup.
 
 ### 12.3 Perbedaan peran
 
@@ -691,23 +726,25 @@ Ketentuan tambahan:
 | Bisa dilewati? | Ya, lewat DevTools/curl | Tidak |
 | Efek gagal | Pesan di form | Status `4xx` dan data tidak disimpan |
 | Pemeriksaan sesi | `ProtectedRoute` | `authenticate` + `authorize` |
+| Kepemilikan warung | Form hanya memuat `/stalls/mine` | `canManageStall()` memeriksa `owner_id` |
 
 ## 13. Toast dan Error Handling
 
 ### 13.1 Toast yang tersedia
 
-| Operasi | Kondisi | Toast |
+| Operasi | Kondisi | Umpan balik |
 |---|---|---|
-| Login | Berhasil | **Berhasil masuk ke MaemBolo.** |
-| Login | Kredensial salah (`401`) | **Email atau password tidak sesuai.** |
-| Login | Server tidak tersedia | **Server tidak dapat dihubungi.** |
+| Login | Berhasil | Toast **Berhasil masuk.** + pindah ke dashboard |
+| Login | Kredensial salah (`401`) | Alert inline **Email atau password tidak sesuai.** |
+| Login | Server tidak tersedia | Alert inline **Server tidak dapat dihubungi.** |
 | Login | Validasi backend `400` | Error per field, tanpa toast tambahan |
-| Menu | Berhasil (`201`) | **Menu berhasil ditambahkan.** |
-| Menu | Ditolak backend (`400`/`404`) | **Menu ditolak backend.** + field error |
-| Menu | Gagal disimpan (`5xx`) | **Menu gagal disimpan.** |
-| Menu | Koneksi terputus | **Koneksi ke server terputus.** |
-| Menu | Sesi berakhir (`401`) | **Sesi login berakhir.** lalu redirect |
-| Logout | Berhasil | **Berhasil keluar dari MaemBolo.** |
+| Menu | Berhasil (`201`) | Toast **Menu berhasil ditambahkan.** |
+| Menu | Ditolak backend (`400`/`404`) | Toast **Menu belum dapat disimpan.** + field error |
+| Menu | Warung bukan miliknya (`403 STALL_FORBIDDEN`) | Toast **Warung bukan milik Anda.** + field error |
+| Menu | Gagal disimpan (`5xx`) | Toast **Menu gagal disimpan.** |
+| Menu | Koneksi terputus | Toast **Koneksi ke server terputus.** |
+| Menu | Sesi berakhir (`401`) | Toast **Sesi login berakhir.** lalu redirect |
+| Logout | Berhasil | Toast **Berhasil keluar.** |
 
 Ketentuan implementasi:
 
@@ -736,6 +773,7 @@ Ketentuan implementasi:
 | `400` | `INVALID_JSON` | Body bukan JSON valid |
 | `401` | `UNAUTHORIZED` | Belum login, kredensial salah, atau sesi kedaluwarsa |
 | `403` | `FORBIDDEN` | Role tidak berwenang |
+| `403` | `STALL_FORBIDDEN` | `stallId` bukan warung milik Owner yang login |
 | `404` | `STALL_NOT_FOUND` | `stallId` tidak ada |
 | `404` | `ROUTE_NOT_FOUND` | Path tidak terdaftar |
 | `409` | `CONFLICT` | Pelanggaran constraint database |
@@ -749,6 +787,7 @@ Ketentuan implementasi:
 | `400` dengan `errors[]` | Dipetakan ke field terkait + fokus ke field pertama |
 | `401` | Toast sesi berakhir, `AuthProvider` menghapus user, `ProtectedRoute` redirect |
 | `403` | Toast pesan akses |
+| `403 STALL_FORBIDDEN` | Field `stallId` ditandai + toast "Warung bukan milik Anda." |
 | `5xx` | Toast pesan umum yang aman |
 | Respons bukan JSON / format salah | `ApiError` dengan pesan "format respons tidak sesuai" |
 
@@ -759,19 +798,21 @@ Ketentuan implementasi:
 3. Buka `http://localhost:3001/health` dan pastikan status `success`.
 4. Jalankan frontend di terminal kedua (bagian 9).
 5. Buka `http://localhost:5173`. Anda diarahkan ke halaman login.
-6. Klik **Masuk ke dashboard** tanpa mengisi apa pun. Amati error email dan password.
+6. Klik **Masuk** tanpa mengisi apa pun. Amati error email dan password.
 7. Isi email `bukan-email` dan password `123`. Amati pesan format email dan minimal 8 karakter.
-8. Isi email benar dengan password salah. Amati toast "Email atau password tidak sesuai." dan tetap di halaman login.
+8. Isi email benar dengan password salah. Amati pesan "Email atau password tidak sesuai." dan tetap di halaman login.
 9. Masuk dengan akun Owner praktikum. Amati toast sukses dan dashboard terbuka.
-10. Refresh halaman. Dashboard tetap terbuka karena cookie sesi masih valid.
-11. Di form menu, submit kosong. Amati error warung, nama, dan harga.
-12. Isi nama hanya spasi, lalu submit. Error nama muncul.
-13. Coba harga `abc`, `0`, `-1`, `1.5`, dan `1e3`.
-14. Isi data valid, submit, dan amati tombol berubah menjadi **Menyimpan...**.
-15. Setelah respons `201`, toast sukses muncul dan daftar menu bertambah.
-16. Hentikan backend, lalu submit menu valid. Amati toast koneksi dan daftar tidak bertambah.
-17. Nyalakan backend, klik **Muat ulang** pada header.
-18. Klik **Keluar**. Anda kembali ke halaman login; membuka `/` lagi tetap diarahkan ke login.
+10. Perhatikan daftar **Warung Saya**. Hanya warung dengan `owner_id` akun ini yang muncul.
+11. Refresh halaman. Dashboard tetap terbuka karena cookie sesi masih valid.
+12. Klik **Tambah Menu**, lalu submit kosong. Amati error warung, nama, kategori, dan harga.
+13. Isi nama hanya spasi, lalu submit. Error nama muncul.
+14. Coba harga `abc`, `0`, `-1`, `1.5`, dan `1e3`.
+15. Isi data valid, submit, dan amati tombol berubah menjadi **Menyimpan...**.
+16. Setelah respons `201`, toast sukses muncul dan daftar menu bertambah.
+17. Buka DevTools, ubah `stallId` pada request menjadi id warung milik Owner lain, lalu kirim. Amati `403 STALL_FORBIDDEN`, field warung ditandai, dan menu tidak bertambah.
+18. Hentikan backend, lalu submit menu valid. Amati toast koneksi dan daftar tidak bertambah.
+19. Nyalakan backend, klik **Muat ulang** pada header.
+20. Klik **Keluar**. Anda kembali ke halaman login; membuka `/` lagi tetap diarahkan ke login.
 
 ## 15. Skenario Pengujian
 
@@ -783,9 +824,9 @@ Ketentuan implementasi:
 | 2 | Format email salah | `Format email tidak valid.`, request tidak dikirim |
 | 3 | Password kosong | `Password wajib diisi.` |
 | 4 | Password 7 karakter | `Password minimal 8 karakter.` |
-| 5 | Email/password salah | `401`, toast kredensial salah, tetap di `/login` |
+| 5 | Email/password salah | `401`, alert inline kredensial salah, tetap di `/login` |
 | 6 | Login benar | `200`, toast sukses, dashboard terbuka, cookie `httpOnly` |
-| 7 | Server mati | Toast "Server tidak dapat dihubungi." |
+| 7 | Server mati | Alert inline "Server tidak dapat dihubungi." |
 | 8 | Refresh dashboard | Sesi bertahan, dashboard tetap terbuka |
 | 9 | Logout lalu buka `/` | Kembali ke `/login`, `/auth/me` menjadi `401` |
 | 10 | Login dengan akun non-Owner | `403 FORBIDDEN`, tidak ada cookie sesi, tetap di `/login` |
@@ -807,7 +848,10 @@ Ketentuan implementasi:
 | 11 | Payload invalid langsung ke API | `400 VALIDATION_ERROR`, data tidak tersimpan |
 | 12 | Menu valid | `201`, row baru di `MENU_ITEMS` |
 | 13 | Backend menolak (`400`/`404`) | Field error, daftar tidak berubah |
-| 14 | Server/database mati | Toast koneksi, daftar tidak berubah |
+| 14 | `stallId` diubah ke warung Owner lain | `403 STALL_FORBIDDEN`, field warung ditandai, data tidak tersimpan |
+| 15 | `GET /api/stalls/mine` tanpa sesi | `401 UNAUTHORIZED` |
+| 16 | `GET /api/stalls/mine` dengan sesi Owner | Hanya warung dengan `ownerId` milik user tersebut |
+| 17 | Server/database mati | Toast koneksi, daftar tidak berubah |
 
 ### 15.3 Pengujian otomatis
 
@@ -829,7 +873,7 @@ npm run lint
 npm run build
 ```
 
-Integration test backend memakai database nyata: login Owner, membuat menu `TEST-HO1-<timestamp>`, lalu menghapusnya kembali.
+Integration test backend memakai database nyata: login Owner, memastikan `/api/stalls/mine` hanya berisi warung miliknya, membuat menu `TEST-HO1-<timestamp>`, menolak `stallId` warung Owner lain dengan `403 STALL_FORBIDDEN`, lalu menghapus data uji kembali.
 
 ### 15.4 Pengujian langsung ke API
 
@@ -867,13 +911,13 @@ Hasil di bawah ini berasal dari eksekusi nyata pada mesin pengembangan (Windows,
 | Jenis | Perintah | Hasil |
 |---|---|---|
 | Type check backend | `npm run typecheck` | Lulus |
-| Unit test backend | `npm run test:unit` | 24 lulus, 0 gagal |
-| Integration test backend | `npm run test:integration` | 21 lulus, 0 gagal |
+| Unit test backend | `npm run test:unit` | 27 lulus, 0 gagal |
+| Integration test backend | `npm run test:integration` | 24 lulus, 0 gagal |
 | Unit test frontend | `npm test` | 23 lulus, 0 gagal |
 | Lint frontend | `npm run lint` | Lulus tanpa error |
-| Build frontend | `npm run build` | Lulus (Vite 8, JS 307.72 kB / gzip 95.15 kB) |
-| Smoke test API | `Invoke-WebRequest` + cookie session | `200`, `201`, `400`, `401`, `403`, `404` sesuai kontrak; login `admin` ditolak `403` tanpa cookie sesi |
-| Uji UI headless | Chrome + CDP | 10 langkah lulus: redirect login, validasi kosong, format email + password pendek, kredensial salah, login sukses, refresh sesi, validasi menu, simpan menu, logout, server mati |
+| Build frontend | `npm run build` | Lulus (Vite 8, JS 303.87 kB / gzip 94.69 kB, CSS 29.66 kB / gzip 6.34 kB) |
+| Smoke test API | `Invoke-WebRequest` + cookie session | `200`, `201`, `400`, `401`, `403 FORBIDDEN`, `403 STALL_FORBIDDEN`, `404` sesuai kontrak; login `admin` ditolak `403` tanpa cookie sesi |
+| Uji UI browser | Browser manual | Login split-card, dashboard hanya memuat warung milik Owner, modal tambah menu, dan validasi field terverifikasi |
 | Cek database | `sqlcmd` | Data uji `TEST-HO1-*` dihapus kembali |
 
 Yang **belum** diotomatisasi: pemeriksaan visual detail (kontras, spacing) dan navigasi keyboard manual. Jalankan checklist bagian 15.1 dan 15.2 saat praktikum.
@@ -908,7 +952,12 @@ Cookie sesi tidak terkirim. Login ulang, gunakan `-WebSession` di PowerShell ata
 
 ### `POST /api/menu` mengembalikan `403`
 
-Anda login sebagai role selain `owner`. Endpoint tambah menu hanya untuk Owner.
+Ada dua kemungkinan:
+
+- `code: "FORBIDDEN"` — role akun bukan `owner`.
+- `code: "STALL_FORBIDDEN"` — role sudah `owner`, tetapi `stallId` bukan warung milik akun tersebut.
+
+Untuk kasus kedua, ambil daftar warung yang boleh dikelola lewat `GET /api/stalls/mine`, lalu pakai salah satu `id` dari respons itu. Frontend sudah melakukan ini; error biasanya muncul bila request dimodifikasi manual.
 
 ### Sesi berakhir terlalu cepat
 

@@ -8,7 +8,7 @@
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test:unit": "node --import tsx --test tests/menuSchema.test.ts tests/authSchema.test.ts",
+    "test:unit": "node --import tsx --test tests/menuSchema.test.ts tests/authSchema.test.ts tests/menuOwnership.test.ts",
     "test:integration": "node --import tsx --test tests/menuApi.test.ts"
   },
   "keywords": [],

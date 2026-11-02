@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { errorMessage, getMenus, getStalls } from '../lib/api'
+import { errorMessage, getMenus, getMyStalls } from '../lib/api'
 import type { MenuItem, Stall } from '../types/menu'
 
 interface MenuData {
@@ -16,9 +16,18 @@ export interface MenuDataState {
   reload: () => void
 }
 
+/**
+ * Dashboard Owner hanya memuat warung miliknya dan menu yang berada di
+ * warung tersebut. Katalog publik tetap tersedia lewat GET /api/menu.
+ */
 async function fetchMenuData(): Promise<MenuData> {
-  const [menus, stalls] = await Promise.all([getMenus(), getStalls()])
-  return { menus, stalls }
+  const [allMenus, myStalls] = await Promise.all([getMenus(), getMyStalls()])
+  const ownedStallIds = new Set(myStalls.map((stall) => stall.id))
+
+  return {
+    menus: allMenus.filter((menu) => ownedStallIds.has(menu.stallId)),
+    stalls: myStalls,
+  }
 }
 
 export function useMenuData(): MenuDataState {

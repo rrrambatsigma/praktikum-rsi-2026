@@ -29,19 +29,33 @@ GO
 
 -- ------------------------------------------------------ WARUNG CAMILAN
 -- Satu warung khusus camilan supaya contoh data masuk akal.
+-- Pemiliknya harus eksplisit Bu Tini, bukan "owner pertama" yang kebetulan
+-- punya id terkecil. Kalau tidak, uji RBAC bisa memakai warung milik orang lain.
 IF NOT EXISTS (SELECT 1 FROM dbo.STALLS WHERE name = N'Gorengan Bu Tini')
 BEGIN
     INSERT INTO dbo.STALLS (owner_id, name, category, location, description)
-    SELECT TOP 1
+    SELECT
         id,
         N'Gorengan Bu Tini',
         N'Camilan',
         N'Kantin FK',
         N'Gorengan dan camilan rumahan.'
     FROM dbo.USERS
-    WHERE role = N'owner'
-    ORDER BY id;
+    WHERE email = N'tini@kantin.test'
+      AND role = N'owner';
 END
+GO
+
+-- Perbaiki data lama bila seed versi sebelumnya menempelkan warung ini
+-- ke owner yang salah.
+UPDATE s
+SET s.owner_id = u.id
+FROM dbo.STALLS s
+CROSS JOIN dbo.USERS u
+WHERE s.name = N'Gorengan Bu Tini'
+  AND u.email = N'tini@kantin.test'
+  AND u.role = N'owner'
+  AND s.owner_id <> u.id;
 GO
 
 -- ------------------------------------------------------ CONTOH CAMILAN

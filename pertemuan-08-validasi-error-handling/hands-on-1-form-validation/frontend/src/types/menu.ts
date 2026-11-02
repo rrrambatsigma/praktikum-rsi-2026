@@ -13,6 +13,7 @@ export interface MenuItem {
 
 export interface Stall {
   id: number
+  ownerId: number
   name: string
   category: string | null
   location: string | null

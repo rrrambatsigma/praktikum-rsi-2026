@@ -1,4 +1,4 @@
-import { ChevronDown, Loader2, Plus, RotateCcw, ShieldCheck } from 'lucide-react'
+import { ChevronDown, Plus, RotateCcw, Store } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { CATEGORY_OPTIONS } from '../data/categories'
 import { isApiError } from '../lib/api'
@@ -14,13 +14,15 @@ import {
   type MenuFormValues,
 } from '../lib/validation'
 import type { MenuPayload, Stall } from '../types/menu'
-import { Alert } from './Alert'
+import { Alert, Button, Field, Spinner } from './ui'
+import { inputClass } from '../lib/styles'
 import { FieldError } from './FieldError'
 
 interface MenuFormProps {
   stalls: Stall[]
   isSubmitting: boolean
   onSubmit: (payload: MenuPayload) => Promise<void>
+  onCancel: () => void
 }
 
 interface FormError {
@@ -48,21 +50,26 @@ function isFormField(value: string): value is MenuFormField {
   return FORM_FIELDS.includes(value as MenuFormField)
 }
 
-const inputBase =
-  'w-full rounded-control border bg-surface px-3.5 py-2.5 text-sm text-text transition placeholder:text-text-muted/70 focus:outline-none focus:ring-2'
-const inputNormal = 'border-border focus:border-primary focus:ring-primary/20'
-const inputInvalid = 'border-danger focus:border-danger focus:ring-danger/20'
+function initialValues(stalls: Stall[]): MenuFormValues {
+  return {
+    ...EMPTY_MENU_FORM,
+    stallId: stalls.length === 1 ? String(stalls[0].id) : '',
+  }
+}
 
-export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
-  const [values, setValues] = useState<MenuFormValues>(EMPTY_MENU_FORM)
+export function MenuForm({ stalls, isSubmitting, onSubmit, onCancel }: MenuFormProps) {
+  const [values, setValues] = useState<MenuFormValues>(() => initialValues(stalls))
   const [errors, setErrors] = useState<MenuFormErrors>({})
   const [formError, setFormError] = useState<FormError | null>(null)
+
+  const singleStall = stalls.length === 1 ? stalls[0] : null
 
   function updateValue<K extends keyof MenuFormValues>(
     key: K,
     value: MenuFormValues[K],
   ) {
     setValues((current) => ({ ...current, [key]: value }))
+    setFormError(null)
 
     if (!isFormField(key)) return
 
@@ -80,13 +87,15 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
   }
 
   function resetForm() {
-    setValues(EMPTY_MENU_FORM)
+    setValues(initialValues(stalls))
     setErrors({})
     setFormError(null)
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
+    if (stalls.length === 0) return
 
     const nextErrors = validateMenuForm(values)
     setErrors(nextErrors)
@@ -133,7 +142,10 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
 
       setErrors(serverFieldErrors)
       setFormError({
-        message: error.message,
+        message:
+          error.code === 'STALL_FORBIDDEN'
+            ? 'Warung ini bukan milik akun Anda.'
+            : error.message,
         details:
           generalDetails.length > 0
             ? generalDetails
@@ -147,73 +159,87 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
     }
   }
 
-  return (
-    <form
-      noValidate
-      onSubmit={handleSubmit}
-      aria-busy={isSubmitting}
-      className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-6"
-    >
-      <div className="flex items-start gap-3">
-        <span className="grid size-10 shrink-0 place-items-center rounded-control bg-surface-muted text-primary">
-          <Plus aria-hidden="true" className="size-5" />
-        </span>
-        <div>
-          <h2 className="text-base font-bold text-text">Tambah Menu</h2>
-          <p className="text-xs text-text-muted">
-            Isi data menu, lalu kirim ke backend untuk divalidasi ulang.
-          </p>
+  if (stalls.length === 0) {
+    return (
+      <div className="space-y-4">
+        <Alert tone="error" title="Belum ada warung">
+          Akun ini belum terhubung ke warung mana pun. Hubungi admin sebelum
+          menambahkan menu.
+        </Alert>
+        <div className="flex justify-end">
+          <Button variant="secondary" onClick={onCancel}>
+            Tutup
+          </Button>
         </div>
       </div>
+    )
+  }
 
+  return (
+    <form id="menu-form" noValidate onSubmit={handleSubmit} aria-busy={isSubmitting}>
       {formError ? (
-        <Alert className="mt-4" title={formError.message}>
-          {formError.details.length > 0 ? (
-            <ul className="list-disc space-y-0.5 pl-4">
-              {formError.details.map((detail) => (
-                <li key={detail}>{detail}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>Periksa kembali data yang dikirim.</p>
-          )}
-        </Alert>
+        <div className="mb-4">
+          <Alert tone="error" title={formError.message}>
+            {formError.details.length > 0 ? (
+              <ul className="list-disc space-y-0.5 pl-4">
+                {formError.details.map((detail) => (
+                  <li key={detail}>{detail}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>Periksa kembali data yang dikirim.</p>
+            )}
+          </Alert>
+        </div>
       ) : null}
 
-      <div className="mt-5 space-y-4">
-        <div>
-          <label htmlFor={FIELD_IDS.stallId} className="mb-1.5 block text-sm font-semibold">
-            Warung <span className="text-danger">*</span>
-          </label>
-          <div className="relative">
-            <select
-              id={FIELD_IDS.stallId}
-              value={values.stallId}
-              onChange={(event) => updateValue('stallId', event.target.value)}
-              aria-invalid={errors.stallId !== undefined}
-              aria-describedby={errors.stallId ? `${FIELD_IDS.stallId}-error` : undefined}
-              className={`${inputBase} appearance-none pr-9 ${errors.stallId ? inputInvalid : inputNormal}`}
-            >
-              <option value="">Pilih warung</option>
-              {stalls.map((stall) => (
-                <option key={stall.id} value={String(stall.id)}>
-                  {stall.name}
-                  {stall.location ? ` — ${stall.location}` : ''}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              aria-hidden="true"
-              className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-text-muted"
-            />
+      <div className="space-y-4">
+        {singleStall ? (
+          <div className="rounded-control border border-border bg-surface-muted/70 px-3.5 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+              Warung Anda
+            </p>
+            <p className="mt-1 flex items-center gap-2 text-sm font-bold text-text">
+              <Store className="size-4 text-primary" aria-hidden="true" />
+              {singleStall.name}
+            </p>
+            {singleStall.location ? (
+              <p className="mt-0.5 text-xs text-text-muted">{singleStall.location}</p>
+            ) : null}
           </div>
-          <FieldError id={`${FIELD_IDS.stallId}-error`} message={errors.stallId} />
-        </div>
+        ) : (
+          <Field label="Warung" htmlFor={FIELD_IDS.stallId}>
+            <div className="relative">
+              <select
+                id={FIELD_IDS.stallId}
+                value={values.stallId}
+                onChange={(event) => updateValue('stallId', event.target.value)}
+                aria-invalid={errors.stallId !== undefined}
+                aria-describedby={errors.stallId ? `${FIELD_IDS.stallId}-error` : undefined}
+                className={`${inputClass} appearance-none pr-9 ${
+                  errors.stallId
+                    ? 'border-danger focus:border-danger focus:ring-danger/15'
+                    : ''
+                }`}
+              >
+                <option value="">Pilih warung</option>
+                {stalls.map((stall) => (
+                  <option key={stall.id} value={String(stall.id)}>
+                    {stall.name}
+                    {stall.location ? ` — ${stall.location}` : ''}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                aria-hidden="true"
+                className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-text-muted"
+              />
+            </div>
+            <FieldError id={`${FIELD_IDS.stallId}-error`} message={errors.stallId} />
+          </Field>
+        )}
 
-        <div>
-          <label htmlFor={FIELD_IDS.name} className="mb-1.5 block text-sm font-semibold">
-            Nama menu <span className="text-danger">*</span>
-          </label>
+        <Field label="Nama menu" htmlFor={FIELD_IDS.name}>
           <input
             id={FIELD_IDS.name}
             type="text"
@@ -224,19 +250,15 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
             onChange={(event) => updateValue('name', event.target.value)}
             aria-invalid={errors.name !== undefined}
             aria-describedby={errors.name ? `${FIELD_IDS.name}-error` : undefined}
-            className={`${inputBase} ${errors.name ? inputInvalid : inputNormal}`}
+            className={`${inputClass} ${
+              errors.name ? 'border-danger focus:border-danger focus:ring-danger/15' : ''
+            }`}
           />
           <FieldError id={`${FIELD_IDS.name}-error`} message={errors.name} />
-        </div>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor={FIELD_IDS.category}
-              className="mb-1.5 block text-sm font-semibold"
-            >
-              Kategori <span className="text-danger">*</span>
-            </label>
+          <Field label="Kategori" htmlFor={FIELD_IDS.category}>
             <div className="relative">
               <select
                 id={FIELD_IDS.category}
@@ -246,7 +268,11 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
                 aria-describedby={
                   errors.category ? `${FIELD_IDS.category}-error` : undefined
                 }
-                className={`${inputBase} appearance-none pr-9 ${errors.category ? inputInvalid : inputNormal}`}
+                className={`${inputClass} appearance-none pr-9 ${
+                  errors.category
+                    ? 'border-danger focus:border-danger focus:ring-danger/15'
+                    : ''
+                }`}
               >
                 <option value="">Pilih kategori</option>
                 {CATEGORY_OPTIONS.map((option) => (
@@ -260,20 +286,14 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
                 className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-text-muted"
               />
             </div>
-            <FieldError
-              id={`${FIELD_IDS.category}-error`}
-              message={errors.category}
-            />
-          </div>
+            <FieldError id={`${FIELD_IDS.category}-error`} message={errors.category} />
+          </Field>
 
-          <div>
-            <label htmlFor={FIELD_IDS.price} className="mb-1.5 block text-sm font-semibold">
-              Harga <span className="text-danger">*</span>
-            </label>
+          <Field label="Harga" htmlFor={FIELD_IDS.price}>
             <div className="relative">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-text-muted"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-text-muted"
               >
                 Rp
               </span>
@@ -289,7 +309,11 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
                 aria-describedby={
                   errors.price ? `${FIELD_IDS.price}-error` : `${FIELD_IDS.price}-help`
                 }
-                className={`${inputBase} pl-10 ${errors.price ? inputInvalid : inputNormal}`}
+                className={`${inputClass} pl-10 ${
+                  errors.price
+                    ? 'border-danger focus:border-danger focus:ring-danger/15'
+                    : ''
+                }`}
               />
             </div>
             {errors.price ? (
@@ -299,15 +323,12 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
                 Angka bulat, tanpa titik atau koma.
               </p>
             )}
-          </div>
+          </Field>
         </div>
 
         <div>
           <div className="mb-1.5 flex items-baseline justify-between gap-3">
-            <label
-              htmlFor={FIELD_IDS.description}
-              className="text-sm font-semibold"
-            >
+            <label htmlFor={FIELD_IDS.description} className="text-sm font-semibold">
               Deskripsi <span className="font-normal text-text-muted">(opsional)</span>
             </label>
             <span
@@ -331,7 +352,11 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
             aria-describedby={
               errors.description ? `${FIELD_IDS.description}-error` : undefined
             }
-            className={`${inputBase} resize-y ${errors.description ? inputInvalid : inputNormal}`}
+            className={`min-h-24 w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 ${
+              errors.description
+                ? 'border-danger focus:border-danger focus:ring-danger/15'
+                : ''
+            }`}
           />
           <FieldError
             id={`${FIELD_IDS.description}-error`}
@@ -344,9 +369,7 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
             <p id="menu-available-label" className="text-sm font-semibold">
               Tersedia hari ini
             </p>
-            <p className="text-xs text-text-muted">
-              Matikan bila menu sedang habis.
-            </p>
+            <p className="text-xs text-text-muted">Matikan bila menu sedang habis.</p>
           </div>
           <button
             type="button"
@@ -369,42 +392,21 @@ export function MenuForm({ stalls, isSubmitting, onSubmit }: MenuFormProps) {
       </div>
 
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:opacity-70"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-              Menyimpan...
-            </>
-          ) : (
-            <>
-              <Plus aria-hidden="true" className="size-4" />
-              Simpan menu
-            </>
-          )}
-        </button>
+        <Button type="submit" className="flex-1" disabled={isSubmitting}>
+          {isSubmitting ? <Spinner /> : <Plus className="size-4" aria-hidden="true" />}
+          {isSubmitting ? 'Menyimpan...' : 'Simpan menu'}
+        </Button>
 
-        <button
-          type="button"
-          onClick={resetForm}
+        <Button
+          variant="secondary"
+          onClick={onCancel}
           disabled={isSubmitting}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-text transition hover:border-primary/40 hover:text-primary disabled:opacity-60"
+          className="px-4"
         >
-          <RotateCcw aria-hidden="true" className="size-4" />
-          Reset
-        </button>
+          <RotateCcw className="size-4" aria-hidden="true" />
+          Batal
+        </Button>
       </div>
-
-      <p className="mt-4 flex items-start gap-2 rounded-control bg-surface-muted px-3 py-2.5 text-xs text-text-muted">
-        <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
-        <span>
-          Frontend memvalidasi untuk kenyamanan pengguna. Backend tetap memvalidasi
-          ulang sebelum data disimpan.
-        </span>
-      </p>
     </form>
   )
 }

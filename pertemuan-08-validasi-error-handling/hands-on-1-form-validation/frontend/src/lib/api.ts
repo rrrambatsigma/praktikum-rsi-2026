@@ -74,7 +74,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<ApiSuccess<
     throw new ApiError(
       0,
       'NETWORK_ERROR',
-      'Tidak dapat terhubung ke server. Pastikan backend berjalan di port 3001.',
+      'Tidak dapat terhubung ke server. Coba lagi beberapa saat.',
     )
   }
 
@@ -139,6 +139,17 @@ export async function getMenus(): Promise<MenuItem[]> {
 
 export async function getStalls(): Promise<Stall[]> {
   const response = await request<Stall[]>('/stalls')
+
+  if (!Array.isArray(response.data)) {
+    throw new ApiError(200, 'INVALID_RESPONSE', 'Daftar warung tidak valid.')
+  }
+
+  return response.data
+}
+
+/** Hanya warung yang boleh dikelola user yang sedang login. */
+export async function getMyStalls(): Promise<Stall[]> {
+  const response = await request<Stall[]>('/stalls/mine')
 
   if (!Array.isArray(response.data)) {
     throw new ApiError(200, 'INVALID_RESPONSE', 'Daftar warung tidak valid.')

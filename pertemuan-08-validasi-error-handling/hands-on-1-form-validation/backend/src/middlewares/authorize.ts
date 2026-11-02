@@ -13,9 +13,7 @@ export function authorize(...allowedRoles: UserRole[]): RequestHandler {
     const user = getUser(req);
 
     if (!allowedRoles.includes(user.role)) {
-      return next(
-        new ForbiddenError('Hanya pemilik warung yang boleh menambah menu.'),
-      );
+      return next(new ForbiddenError('Anda tidak memiliki akses ke operasi ini.'));
     }
 
     return next();

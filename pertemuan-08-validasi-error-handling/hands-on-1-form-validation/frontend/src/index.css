@@ -1,34 +1,34 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #b94716;
-  --color-primary-hover: #96380f;
+  --color-primary: #b9470c;
+  --color-primary-hover: #9a3a09;
   --color-primary-dark: #87320f;
 
   --color-page: #fff8f3;
   --color-surface: #ffffff;
   --color-surface-muted: #fff1e7;
 
-  --color-text: #29231f;
-  --color-text-muted: #796d65;
-  --color-border: #ede1d8;
+  --color-text: #25211f;
+  --color-text-muted: #80736b;
+  --color-border: #f0ded3;
 
-  --color-success: #18794e;
-  --color-success-bg: #e6f5ec;
-  --color-danger: #c43232;
+  --color-success: #16834a;
+  --color-success-bg: #e8f7ee;
+  --color-warning: #b7791f;
+  --color-warning-bg: #fff6df;
+  --color-danger: #c53030;
   --color-danger-bg: #fdecec;
-  --color-warning: #946200;
-  --color-warning-bg: #fff4d6;
 
   --font-sans: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
   --font-heading: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
 
   --radius-control: 0.625rem;
-  --radius-card: 0.75rem;
+  --radius-card: 0.875rem;
   --radius-dialog: 1rem;
 
-  --shadow-card: 0 1px 2px rgb(74 37 18 / 4%), 0 8px 24px rgb(74 37 18 / 4%);
-  --shadow-dialog: 0 24px 64px rgb(41 35 31 / 18%);
+  --shadow-card: 0 1px 2px rgb(74 37 18 / 5%), 0 10px 28px rgb(74 37 18 / 5%);
+  --shadow-dialog: 0 24px 64px rgb(37 33 31 / 20%);
 }
 
 @layer base {

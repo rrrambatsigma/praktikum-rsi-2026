@@ -4,6 +4,8 @@ import { NotFoundError } from '../errors/NotFoundError.ts';
 import { MenuRepository, type MenuRow } from '../repositories/menuRepository.ts';
 import { StallRepository } from '../repositories/stallRepository.ts';
 import type { CreateMenuInput } from '../schemas/menuSchema.ts';
+import type { AuthUser } from '../types/user.ts';
+import { canManageStall } from './menuOwnership.ts';
 
 export class MenuService {
   constructor(
@@ -29,7 +31,7 @@ export class MenuService {
     return rows.map((row) => this.toDto(row));
   }
 
-  async createMenu(input: CreateMenuInput): Promise<MenuDto> {
+  async createMenu(input: CreateMenuInput, user: AuthUser): Promise<MenuDto> {
     const stall = await this.stallRepository.findById(input.stallId);
 
     if (!stall) {
@@ -39,6 +41,22 @@ export class MenuService {
           message: 'Warung yang dipilih tidak ditemukan.',
         },
       ]);
+    }
+
+    // Inilah lapisan yang sebelumnya hilang: role Owner sudah benar, tetapi
+    // warung yang dituju belum tentu miliknya.
+    if (!canManageStall(stall.ownerId, user)) {
+      throw new AppError(
+        403,
+        'STALL_FORBIDDEN',
+        'Anda hanya dapat menambah menu pada warung milik Anda.',
+        [
+          {
+            field: 'stallId',
+            message: 'Warung ini bukan milik akun Anda.',
+          },
+        ],
+      );
     }
 
     const created = await this.menuRepository.create(input);
