@@ -1,5 +1,6 @@
 import type { MenuDto } from '../dtos/menuDto.ts';
 import { AppError } from '../errors/AppError.ts';
+import { ConflictError } from '../errors/ConflictError.ts';
 import { NotFoundError } from '../errors/NotFoundError.ts';
 import { MenuRepository, type MenuRow } from '../repositories/menuRepository.ts';
 import { StallRepository } from '../repositories/stallRepository.ts';
@@ -56,6 +57,19 @@ export class MenuService {
             message: 'Warung ini bukan milik akun Anda.',
           },
         ],
+      );
+    }
+
+    const nameTaken = await this.menuRepository.existsByNameInStall(
+      input.name,
+      input.stallId,
+    );
+
+    if (nameTaken) {
+      throw new ConflictError(
+        'MENU_NAME_TAKEN',
+        'Nama menu sudah dipakai di warung ini.',
+        [{ field: 'name', message: 'Gunakan nama menu yang berbeda.' }],
       );
     }
 

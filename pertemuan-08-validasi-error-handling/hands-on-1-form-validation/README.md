@@ -54,13 +54,16 @@ Setelah menyelesaikan hands-on ini, mahasiswa diharapkan mampu:
 | SQL Server | Berjalan di `localhost:1433` |
 | Database | `review_kantin` dari Pertemuan 03 |
 | Akun database | `praktikum_user` dari Pertemuan 03 |
-| Shell | PowerShell di Windows |
+| Database tool | SQL Server Management Studio (SSMS) |
 | Browser | Chrome, Edge, atau Firefox versi terbaru |
 
-Pastikan database sudah ada:
+Pastikan database sudah ada. Buka SSMS, connect ke instance Pertemuan 03, lalu jalankan:
 
-```powershell
-sqlcmd -S localhost -E -C -d review_kantin -Q "SELECT COUNT(*) AS total FROM dbo.MENU_ITEMS;"
+```sql
+USE review_kantin;
+GO
+SELECT COUNT(*) AS total FROM dbo.MENU_ITEMS;
+GO
 ```
 
 ## 4. Teknologi
@@ -262,51 +265,37 @@ Jika backend menolak, `errors[].field` dipetakan kembali ke field form. Jika kon
 
 ## 7. Setup Database
 
-Jalankan dari **root repository** `E:\praktikum-rsi-2026`.
+Buka SQL Server Management Studio (SSMS), lalu connect ke instance SQL Server yang kamu pakai di Pertemuan 03. Buka file berikut satu per satu dari folder `db/`, lalu jalankan dengan F5:
 
-### 7.1 Cek database
+1. `01-menu-schema.sql` — menambah kolom `category` dan `description`.
+2. `02-menu-seed.sql` — mengisi kategori dan contoh menu camilan.
+3. `03-auth-seed.sql` — memperbaiki hash password akun owner `tini@kantin.test`.
 
-```powershell
-sqlcmd -S localhost -E -C -d review_kantin -Q "SELECT COUNT(*) AS total FROM dbo.MENU_ITEMS;"
+Gunakan akun yang punya hak DDL, misalnya `sa` atau admin database. Akun `praktikum_user` hanya punya hak baca dan tulis data, jadi tidak bisa menambah kolom.
+
+Script bersifat aditif dan idempoten, aman dijalankan ulang. Kalau SSMS melaporkan `dbo.MENU_ITEMS` belum ada, jalankan schema Pertemuan 03 lebih dulu.
+
+### Verifikasi lewat SSMS
+
+Buka New Query, jalankan:
+
+```sql
+USE review_kantin;
+GO
+
+SELECT id, name, email, role, LEFT(password_hash, 7) AS hash_prefix
+FROM dbo.USERS
+WHERE role = 'owner';
+GO
+
+SELECT category, COUNT(*) AS jumlah
+FROM dbo.MENU_ITEMS
+GROUP BY category
+ORDER BY category;
+GO
 ```
 
-### 7.2 Migrasi schema menu
-
-```powershell
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\01-menu-schema.sql"
-```
-
-Script ini menambahkan secara **aditif dan idempoten**:
-
-- `category NVARCHAR(20) NULL`
-- `description NVARCHAR(255) NULL`
-- constraint `CK_MENU_ITEMS_category` untuk `makanan`, `minuman`, `camilan`, atau `NULL`
-
-### 7.3 Seed menu
-
-```powershell
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\02-menu-seed.sql"
-```
-
-Seed melakukan:
-
-1. Backfill kategori menu lama dari kategori warung.
-2. Menambah warung `Gorengan Bu Tini` bila belum ada, dengan `owner_id` eksplisit milik `tini@kantin.test`.
-3. Memperbaiki data lama bila warung tersebut sebelumnya menempel ke Owner lain.
-4. Menambah empat menu camilan, satu di antaranya `is_available = 0`.
-5. Menghapus duplikat seed bila script dijalankan ulang.
-
-### 7.4 Seed akun Owner
-
-Autentikasi memakai data `dbo.USERS` dari Pertemuan 03 dan hash bcrypt dari Pertemuan 05. Jalankan script berikut agar hash akun Owner benar-benar valid:
-
-```powershell
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\03-auth-seed.sql"
-```
-
-Script ini **tidak membuat akun baru**. Ia hanya memperbarui hash milik akun yang sudah ada dan akan gagal dengan pesan jelas bila akun tersebut tidak ditemukan.
-
-Akun praktikum yang benar-benar terdaftar:
+Hash yang valid diawali `$2b$` dan panjangnya 60 karakter. Akun praktikum:
 
 | Field | Nilai |
 |---|---|
@@ -314,26 +303,14 @@ Akun praktikum yang benar-benar terdaftar:
 | Password | `rahasia123` |
 | Role | `owner` |
 
-> Password di atas hanya untuk lingkungan praktikum dan sudah diumumkan di seed Pertemuan 05. Untuk penggunaan nyata, ganti password dan `JWT_SECRET`. Hash bcrypt disimpan di database; password plaintext tidak pernah disimpan aplikasi.
-
-### 7.5 Verifikasi
-
-```powershell
-sqlcmd -S localhost -E -C -d review_kantin -Q "SELECT id, name, email, role, LEFT(password_hash, 7) AS hash_prefix FROM dbo.USERS WHERE role = 'owner';"
-
-sqlcmd -S localhost -E -C -d review_kantin -Q "SELECT category, COUNT(*) AS jumlah FROM dbo.MENU_ITEMS GROUP BY category ORDER BY category;"
-```
-
-Hash yang valid diawali `$2b$` dan panjangnya 60 karakter. Jumlah menu bergantung pada data yang sudah Anda tambahkan; seed awal Pertemuan 08 menghasilkan 24 menu.
-
-> Jika login SQL Server memakai autentikasi SQL, ganti `-E` dengan `-U praktikum_user` lalu tambahkan `-P` saat diminta.
+> Password di atas hanya untuk lingkungan praktikum. Untuk penggunaan nyata, ganti password dan `JWT_SECRET`.
 
 ## 8. Setup Backend
 
 ```powershell
 cd pertemuan-08-validasi-error-handling\hands-on-1-form-validation\backend
-Copy-Item .env.example .env
-notepad .env
+cp .env.example .env
+# isi .env
 ```
 
 Isi `.env`:
@@ -399,7 +376,7 @@ Buka terminal baru:
 
 ```powershell
 cd pertemuan-08-validasi-error-handling\hands-on-1-form-validation\frontend
-Copy-Item .env.example .env
+cp .env.example .env
 npm install
 npm run dev
 ```
@@ -903,9 +880,15 @@ curl.exe --% -s -b cookies.txt -X POST http://localhost:3001/api/menu -H "Conten
 
 ### 15.5 Verifikasi database
 
-```powershell
-sqlcmd -S localhost -E -C -d review_kantin -Q "SELECT COUNT(*) AS total FROM dbo.MENU_ITEMS;"
-sqlcmd -S localhost -E -C -d review_kantin -Q "SELECT id, name, category, price, is_available FROM dbo.MENU_ITEMS ORDER BY id DESC;"
+Buka SSMS, connect ke `review_kantin`, lalu jalankan:
+
+```sql
+SELECT COUNT(*) AS total FROM dbo.MENU_ITEMS;
+GO
+SELECT id, name, category, price, is_available
+FROM dbo.MENU_ITEMS
+ORDER BY id DESC;
+GO
 ```
 
 Jumlah row hanya bertambah setelah submit valid.
@@ -918,13 +901,13 @@ Hasil di bawah ini berasal dari eksekusi nyata pada mesin pengembangan (Windows,
 |---|---|---|
 | Type check backend | `npm run typecheck` | Lulus |
 | Unit test backend | `npm run test:unit` | 27 lulus, 0 gagal |
-| Integration test backend | `npm run test:integration` | 24 lulus, 0 gagal |
+| Integration test backend | `npm run test:integration` | 25 lulus, 0 gagal |
 | Unit test frontend | `npm test` | 23 lulus, 0 gagal |
 | Lint frontend | `npm run lint` | Lulus tanpa error |
 | Build frontend | `npm run build` | Lulus (Vite 8, JS 303.87 kB / gzip 94.69 kB, CSS 29.66 kB / gzip 6.34 kB) |
 | Smoke test API | `Invoke-WebRequest` + cookie session | `200`, `201`, `400`, `401`, `403 FORBIDDEN`, `403 STALL_FORBIDDEN`, `404` sesuai kontrak; login `admin` ditolak `403` tanpa cookie sesi |
 | Uji UI browser | Browser manual | Login split-card, dashboard hanya memuat warung milik Owner, modal tambah menu, dan validasi field terverifikasi |
-| Cek database | `sqlcmd` | Data uji `TEST-HO1-*` dihapus kembali |
+| Cek database | SSMS | Data uji `TEST-HO1-*` dihapus kembali |
 
 Yang **belum** diotomatisasi: pemeriksaan visual detail (kontras, spacing) dan navigasi keyboard manual. Jalankan checklist bagian 15.1 dan 15.2 saat praktikum.
 
@@ -939,8 +922,14 @@ Tambahkan `JWT_SECRET` di `backend/.env`, lalu restart backend. Jangan memakai s
 1. Jalankan `db\03-auth-seed.sql`.
 2. Pastikan akun ada dan role-nya `owner`:
 
-```powershell
-sqlcmd -S localhost -E -C -d review_kantin -Q "SELECT id, email, role, LEFT(password_hash, 7) AS prefix, LEN(password_hash) AS panjang FROM dbo.USERS WHERE email = 'tini@kantin.test';"
+Buka SSMS, connect ke `review_kantin`, lalu jalankan:
+
+```sql
+SELECT id, email, role, LEFT(password_hash, 7) AS prefix,
+       LEN(password_hash) AS panjang
+FROM dbo.USERS
+WHERE email = 'tini@kantin.test';
+GO
 ```
 
 Hash harus diawali `$2b$` dan panjang 60. Placeholder seperti `hash_owner1` tidak bisa dipakai `bcrypt.compare`.
@@ -975,9 +964,11 @@ Sesuaikan `JWT_EXPIRES_IN` di `.env`, misalnya `1d` atau `8h`, lalu login ulang.
 - Cek `DB_SERVER`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, dan `DB_NAME`.
 - Untuk SQL Server lokal, gunakan `DB_ENCRYPT=false` dan `DB_TRUST_SERVER_CERTIFICATE=true`.
 
-```powershell
-Get-Service | Where-Object { $_.Name -like "MSSQL*" }
-sqlcmd -S localhost -E -C -Q "SELECT @@VERSION;"
+Pastikan service SQL Server berjalan, lalu cek koneksi dan versi server dari SSMS:
+
+```sql
+SELECT @@VERSION AS versi;
+GO
 ```
 
 ### `Login failed for user 'praktikum_user'`

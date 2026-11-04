@@ -88,4 +88,19 @@ export class MenuRepository {
     const createdId = result.recordset[0]?.id;
     return createdId ? this.findById(createdId) : null;
   }
+
+  async existsByNameInStall(name: string, stallId: number): Promise<boolean> {
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .input('name', sql.NVarChar(100), name)
+      .input('stallId', sql.Int, stallId)
+      .query<{ found: number }>(`
+        SELECT TOP 1 1 AS found
+        FROM dbo.MENU_ITEMS
+        WHERE stall_id = @stallId AND name = @name
+      `);
+
+    return result.recordset.length > 0;
+  }
 }

@@ -34,56 +34,66 @@ Hands-on 1 adalah fondasi. Hands-on 2 dibangun di folder terpisah dan **tidak me
 
 - Node.js >= 22.18 dan npm.
 - SQL Server aktif di `localhost:1433`.
-- Database `review_kantin` sudah dibuat melalui Pertemuan 03.
-- PowerShell (contoh perintah memakai PowerShell).
+- Database `review_kantin` dan schema Pertemuan 03 sudah ada.
+- SQL Server Management Studio (SSMS).
 
 ## Mulai Cepat
 
-Dari root repository `E:\praktikum-rsi-2026`:
+### 1. Siapkan database lewat SSMS
 
-```powershell
-# 1. Migrasi + seed (aditif dan idempoten)
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\01-menu-schema.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\02-menu-seed.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\03-auth-seed.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\04-orders-schema.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\05-demo-accounts.sql"
+Buka SSMS, connect ke instance SQL Server yang dipakai di Pertemuan 03. Buka dan jalankan file berikut satu per satu dengan F5, sesuai urutan:
+
+1. `db/01-menu-schema.sql`
+2. `db/02-menu-seed.sql`
+3. `db/03-auth-seed.sql`
+4. `db/04-orders-schema.sql`
+5. `db/05-demo-accounts.sql`
+6. `db/06-order-stall-snapshot.sql`
+
+Gunakan akun yang punya hak DDL, misalnya `sa` atau admin database. `praktikum_user` hanya punya hak baca/tulis data.
+
+### 2. Hands-on 1
+
+Backend, dari terminal pertama:
+
+```bash
+cd pertemuan-08-validasi-error-handling/hands-on-1-form-validation/backend
+cp .env.example .env
+# isi DB_USER, DB_PASSWORD, dan JWT_SECRET
+npm install
+npm run dev
 ```
 
-### Hands-on 1
+Frontend, dari terminal kedua:
 
-```powershell
-# Backend (terminal 1)
-cd pertemuan-08-validasi-error-handling\hands-on-1-form-validation\backend
-Copy-Item .env.example .env
-notepad .env                 # isi DB_USER, DB_PASSWORD, dan JWT_SECRET
+```bash
+cd pertemuan-08-validasi-error-handling/hands-on-1-form-validation/frontend
+cp .env.example .env
 npm install
-npm run dev                  # http://localhost:3001
-
-# Frontend (terminal 2)
-cd ..\frontend
-Copy-Item .env.example .env
-npm install
-npm run dev                  # http://localhost:5173
+npm run dev
 ```
 
 Panduan lengkap: [`hands-on-1-form-validation/README.md`](hands-on-1-form-validation/README.md).
 
-### Hands-on 2
+### 3. Hands-on 2
 
-```powershell
-# Backend (terminal 1)
-cd pertemuan-08-validasi-error-handling\hands-on-2-centralized-error-handling\backend
-Copy-Item .env.example .env
-notepad .env                 # sesuaikan DB_USER, DB_PASSWORD, JWT_SECRET
-npm install
-npm run dev                  # http://localhost:3002
+Backend, dari terminal pertama:
 
-# Frontend (terminal 2)
-cd ..\frontend
-Copy-Item .env.example .env
+```bash
+cd pertemuan-08-validasi-error-handling/hands-on-2-centralized-error-handling/backend
+cp .env.example .env
+# isi DB_USER, DB_PASSWORD, dan JWT_SECRET
 npm install
-npm run dev                  # http://localhost:5174
+npm run dev
+```
+
+Frontend, dari terminal kedua:
+
+```bash
+cd pertemuan-08-validasi-error-handling/hands-on-2-centralized-error-handling/frontend
+cp .env.example .env
+npm install
+npm run dev
 ```
 
 Panduan lengkap: [`hands-on-2-centralized-error-handling/README.md`](hands-on-2-centralized-error-handling/README.md).
@@ -107,7 +117,8 @@ pertemuan-08-validasi-error-handling/
 |   |-- 02-menu-seed.sql            # backfill kategori + contoh camilan
 |   |-- 03-auth-seed.sql            # akun owner praktikum
 |   |-- 04-orders-schema.sql        # ORDERS + ORDER_ITEMS
-|   `-- 05-demo-accounts.sql        # akun admin/customer demo
+|   |-- 05-demo-accounts.sql        # akun admin/customer demo
+|   `-- 06-order-stall-snapshot.sql  # snapshot warung pada item pesanan
 |-- hands-on-1-form-validation/
 |   |-- backend/                    # Express 5 + zod + mssql + Fetch
 |   |-- frontend/                   # React 19 + Vite 8 + Tailwind 4
@@ -115,14 +126,13 @@ pertemuan-08-validasi-error-handling/
 |-- hands-on-2-centralized-error-handling/
 |   |-- backend/                    # Express 5 + zod + mssql + Axios contract
 |   |-- frontend/                   # React 19 + Vite 8 + Tailwind 4 + Axios
-|   |-- docs/                       # slide, lembar kerja, matriks uji, demo
 |   `-- README.md
 `-- README.md
 ```
 
 ## Perubahan Database
 
-Pertemuan 08 **tidak membuat database baru** dan tidak mengubah tabel milik Pertemuan 03–07 secara destruktif.
+Pertemuan 08 **tidak membuat database baru** dan tidak mengubah tabel milik Pertemuan 03 sampai 07 secara destruktif.
 
 | Objek | Perubahan | Sifat |
 |---|---|---|

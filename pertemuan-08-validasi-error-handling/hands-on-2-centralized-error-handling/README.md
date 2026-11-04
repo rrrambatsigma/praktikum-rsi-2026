@@ -60,37 +60,47 @@ Folder ini sengaja terpisah dari `hands-on-1-form-validation`. Source Hands-on 1
 
 - Node.js >= 22.18 dan npm.
 - SQL Server aktif di `localhost:1433`.
-- Database `review_kantin` dari Pertemuan 03.
-- PowerShell (contoh perintah memakai PowerShell).
+- Database `review_kantin` dan schema Pertemuan 03 sudah ada.
+- SQL Server Management Studio (SSMS).
 
 ## Mulai Cepat
 
-Dari root repository `E:\praktikum-rsi-2026`:
+### 1. Siapkan database lewat SSMS
 
-```powershell
-# 1. Migrasi dan seed (idempoten)
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\01-menu-schema.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\02-menu-seed.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\03-auth-seed.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\04-orders-schema.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\05-demo-accounts.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\06-order-stall-snapshot.sql"
+Buka SSMS, connect ke instance SQL Server yang dipakai di Pertemuan 03. Buka dan jalankan file berikut satu per satu dengan F5, sesuai urutan:
 
-# 2. Backend (terminal 1)
-cd pertemuan-08-validasi-error-handling\hands-on-2-centralized-error-handling\backend
-Copy-Item .env.example .env
-notepad .env                 # sesuaikan DB_USER, DB_PASSWORD, JWT_SECRET
+1. `db/01-menu-schema.sql`
+2. `db/02-menu-seed.sql`
+3. `db/03-auth-seed.sql`
+4. `db/04-orders-schema.sql`
+5. `db/05-demo-accounts.sql`
+6. `db/06-order-stall-snapshot.sql`
+
+Gunakan akun yang punya hak DDL, misalnya `sa` atau admin database. `praktikum_user` hanya punya hak baca/tulis data.
+
+### 2. Backend
+
+```bash
+cd pertemuan-08-validasi-error-handling/hands-on-2-centralized-error-handling/backend
+cp .env.example .env
+# sesuaikan DB_USER, DB_PASSWORD, JWT_SECRET
 npm install
-npm run dev                  # http://localhost:3002
-
-# 3. Frontend (terminal 2)
-cd ..\frontend
-Copy-Item .env.example .env
-npm install
-npm run dev                  # http://localhost:5174
+npm run typecheck
+npm run dev
 ```
 
-Jika `sqlcmd -E` tidak tersedia, gunakan akun SQL Server yang punya hak DDL. User `praktikum_user` hanya memiliki hak baca/tulis data, sehingga `CREATE TABLE` untuk `ORDERS` perlu dijalankan dengan akun admin database.
+### 3. Frontend
+
+```bash
+cd pertemuan-08-validasi-error-handling/hands-on-2-centralized-error-handling/frontend
+cp .env.example .env
+npm install
+npm run lint
+npm run build
+npm run dev
+```
+
+Swagger UI: `http://localhost:3002/api-docs`
 
 ## Akun Demo
 
@@ -100,7 +110,7 @@ Jika `sqlcmd -E` tidak tersedia, gunakan akun SQL Server yang punya hak DDL. Use
 | Owner | `tini@kantin.test` | `rahasia123` | `/dashboard` |
 | Customer | `bagas@student.test` | `rahasia123` | `/` |
 
-Akun demo di atas dibuat/diperbaiki oleh `db/05-demo-accounts.sql`. Password hanya untuk praktikum.
+Akun demo di atas disiapkan oleh `db/03-auth-seed.sql` dan `db/05-demo-accounts.sql`. Password hanya untuk praktikum.
 
 ## Alur Pengguna
 
@@ -299,8 +309,8 @@ Integration test memakai database nyata. Pastikan `04-orders-schema.sql` dan `05
 | Pemeriksaan | Hasil |
 |---|---|
 | Type check backend | Lulus |
-| Unit test backend | 42/42 lulus |
-| Integration test backend | 14/14 lulus |
+| Unit test backend | 44/44 lulus |
+| Integration test backend | 16/16 lulus |
 | Unit test frontend | 33/33 lulus |
 | Lint frontend | Lulus |
 | Build frontend | Lulus |
@@ -315,7 +325,7 @@ Integration test memakai database nyata. Pastikan `04-orders-schema.sql` dan `05
 
 | Gejala | Penyebab umum |
 |---|---|
-| `CREATE TABLE permission denied` | Jalankan `04-orders-schema.sql` dengan akun DDL, mis. `sqlcmd -E` |
+| `CREATE TABLE permission denied` | Jalankan `04-orders-schema.sql` lewat SSMS dengan akun yang punya hak DDL, misalnya `sa` |
 | Login admin/customer `401` | `05-demo-accounts.sql` belum dijalankan |
 | Register `409 EMAIL_TAKEN` | Email sudah ada; gunakan email lain |
 | Checkout `409 MENU_UNAVAILABLE` | Menu sedang habis; hapus dari keranjang |
