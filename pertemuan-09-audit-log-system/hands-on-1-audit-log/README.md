@@ -1,10 +1,3 @@
-> **Branch starter.** Backend dan API client sudah lengkap. Lengkapi halaman frontend yang ditandai `TODO`.
->
-> File yang perlu dikerjakan:
-> - `frontend/src/pages/AuditLogPage.tsx`: memuat data, filter, pagination, dan detail metadata
->
-> Route `/admin/audit-logs`, menu **Audit**, tipe data, helper label, dan `getAuditLogs` sudah disiapkan. Jalankan backend dan pastikan `GET /api/audit-logs` mengembalikan data sebelum mengerjakan halaman.
-
 # Hands-on 1 - Audit Log System
 
 Hands-on Pertemuan 09. Fokusnya adalah **mencatat aktivitas penting ke tabel audit secara atomik**, lalu menampilkannya sebagai riwayat yang hanya bisa dibaca admin.
