@@ -1,0 +1,182 @@
+import sql from 'mssql';
+import { getPool } from '../db/pool.ts';
+import { createRequest } from '../db/request.ts';
+import type { MenuCategory } from '../dtos/menuDto.ts';
+import type { CreateMenuInput } from '../schemas/menuSchema.ts';
+
+export interface MenuRow {
+  id: number;
+  stallId: number;
+  stallOwnerId: number;
+  stallName: string;
+  name: string;
+  category: MenuCategory | null;
+  price: number;
+  description: string | null;
+  isAvailable: boolean;
+}
+
+const menuSelect = `
+  SELECT
+    m.id,
+    m.stall_id AS stallId,
+    s.owner_id AS stallOwnerId,
+    s.name AS stallName,
+    m.name,
+    m.category,
+    m.price,
+    m.description,
+    m.is_available AS isAvailable
+  FROM dbo.MENU_ITEMS m
+  INNER JOIN dbo.STALLS s ON s.id = m.stall_id
+`;
+
+function toCategory(value: unknown): MenuCategory | null {
+  if (value === 'makanan' || value === 'minuman' || value === 'camilan') {
+    return value;
+  }
+
+  return null;
+}
+
+function normalizeRow(row: MenuRow): MenuRow {
+  return {
+    ...row,
+    category: toCategory(row.category),
+    price: Number(row.price),
+    description: row.description ?? null,
+    isAvailable: Boolean(row.isAvailable),
+  };
+}
+
+export class MenuRepository {
+  async findAll(): Promise<MenuRow[]> {
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .query<MenuRow>(`${menuSelect} ORDER BY m.id DESC`);
+
+    return result.recordset.map(normalizeRow);
+  }
+
+  async findById(
+    id: number,
+    transaction?: sql.Transaction,
+  ): Promise<MenuRow | null> {
+    const target = await createRequest(transaction);
+    const result = await target
+      .input('id', sql.Int, id)
+      .query<MenuRow>(`${menuSelect} WHERE m.id = @id`);
+
+    const row = result.recordset[0];
+    return row ? normalizeRow(row) : null;
+  }
+
+  async findByIds(ids: number[]): Promise<MenuRow[]> {
+    if (ids.length === 0) return [];
+
+    const pool = await getPool();
+    const request = pool.request();
+    const placeholders = ids.map((id, index) => {
+      request.input(`id${index}`, sql.Int, id);
+      return `@id${index}`;
+    });
+
+    const result = await request.query<MenuRow>(
+      `${menuSelect} WHERE m.id IN (${placeholders.join(', ')})`,
+    );
+
+    return result.recordset.map(normalizeRow);
+  }
+
+  async existsByNameInStall(
+    name: string,
+    stallId: number,
+    excludeId?: number,
+  ): Promise<boolean> {
+    const pool = await getPool();
+    const request = pool
+      .request()
+      .input('name', sql.NVarChar(100), name)
+      .input('stallId', sql.Int, stallId);
+
+    let filter = '';
+
+    if (excludeId !== undefined) {
+      request.input('excludeId', sql.Int, excludeId);
+      filter = ' AND id <> @excludeId';
+    }
+
+    const result = await request.query<{ found: number }>(`
+      SELECT TOP 1 1 AS found
+      FROM dbo.MENU_ITEMS
+      WHERE name = @name AND stall_id = @stallId${filter}
+    `);
+
+    return result.recordset.length > 0;
+  }
+
+  async create(
+    input: CreateMenuInput,
+    transaction?: sql.Transaction,
+  ): Promise<MenuRow | null> {
+    const target = await createRequest(transaction);
+    const result = await target
+      .input('stallId', sql.Int, input.stallId)
+      .input('name', sql.NVarChar(100), input.name)
+      .input('category', sql.NVarChar(20), input.category)
+      .input('price', sql.Int, input.price)
+      .input('description', sql.NVarChar(255), input.description || null)
+      .input('isAvailable', sql.Bit, input.isAvailable)
+      .query<{ id: number }>(`
+        INSERT INTO dbo.MENU_ITEMS
+          (stall_id, name, category, price, description, is_available)
+        OUTPUT INSERTED.id
+        VALUES
+          (@stallId, @name, @category, @price, @description, @isAvailable)
+      `);
+
+    const createdId = result.recordset[0]?.id;
+    return createdId ? this.findById(createdId, transaction) : null;
+  }
+
+  async update(
+    id: number,
+    input: CreateMenuInput,
+    transaction?: sql.Transaction,
+  ): Promise<MenuRow | null> {
+    const target = await createRequest(transaction);
+    const result = await target
+      .input('id', sql.Int, id)
+      .input('stallId', sql.Int, input.stallId)
+      .input('name', sql.NVarChar(100), input.name)
+      .input('category', sql.NVarChar(20), input.category)
+      .input('price', sql.Int, input.price)
+      .input('description', sql.NVarChar(255), input.description || null)
+      .input('isAvailable', sql.Bit, input.isAvailable)
+      .query<{ id: number }>(`
+        UPDATE dbo.MENU_ITEMS
+        SET
+          stall_id = @stallId,
+          name = @name,
+          category = @category,
+          price = @price,
+          description = @description,
+          is_available = @isAvailable
+        OUTPUT INSERTED.id
+        WHERE id = @id
+      `);
+
+    const updatedId = result.recordset[0]?.id;
+    return updatedId ? this.findById(updatedId, transaction) : null;
+  }
+
+  async delete(id: number, transaction?: sql.Transaction): Promise<boolean> {
+    const target = await createRequest(transaction);
+    const result = await target
+      .input('id', sql.Int, id)
+      .query('DELETE FROM dbo.MENU_ITEMS WHERE id = @id');
+
+    return result.rowsAffected[0] > 0;
+  }
+}
