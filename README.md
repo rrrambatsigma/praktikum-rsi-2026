@@ -22,6 +22,6 @@ npm install
 npm run dev
 ```
 
-Backend berjalan di `http://localhost:3003`, frontend di `http://localhost:5175`.
+Backend berjalan di `http://localhost:3002`, frontend di `http://localhost:5174`.
 
 Panduan lengkap, akun demo, dan alur pengujian ada di [`hands-on-1-audit-log/README.md`](pertemuan-09-audit-log-system/hands-on-1-audit-log/README.md).

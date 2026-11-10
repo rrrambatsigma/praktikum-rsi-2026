@@ -74,7 +74,7 @@ cp .env.example .env
 # sesuaikan DB_USER, DB_PASSWORD, dan JWT_SECRET
 npm install
 npm run dev
-# http://localhost:3003
+# http://localhost:3002
 ```
 
 Frontend, dari terminal kedua:
@@ -84,10 +84,10 @@ cd pertemuan-09-audit-log-system/hands-on-1-audit-log/frontend
 cp .env.example .env
 npm install
 npm run dev
-# http://localhost:5175
+# http://localhost:5174
 ```
 
-Port Pertemuan 09 sengaja dibedakan dari Pertemuan 08 (`3002` dan `5174`) supaya kedua hands-on bisa berjalan bersamaan. Nama cookie juga dibedakan, yaitu `kantin_session_ho3`.
+Backend berjalan di `3002` dan frontend di `5174`, sama seperti Hands-on 2 Pertemuan 08.
 
 `dbo.AUDIT_LOGS` sudah dibuat oleh skema Pertemuan 03. Script `01-audit-log-schema.sql` memastikan tabel ada, menambahkan index, dan menyamakan default `created_at` ke UTC. Frontend menampilkan waktu tersebut dalam zona waktu browser.
 
