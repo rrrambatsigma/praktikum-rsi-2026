@@ -11,7 +11,7 @@ GO
 SELECT TOP (20)
     a.id,
     a.created_at,
-    u.name  AS user_name,
+    u.email AS user_email,
     u.role  AS user_role,
     a.action,
     a.target_table,
