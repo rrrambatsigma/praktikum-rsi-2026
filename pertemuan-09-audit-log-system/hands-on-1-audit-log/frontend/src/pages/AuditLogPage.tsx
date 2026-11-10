@@ -217,7 +217,6 @@ export function AuditLogPage() {
                 type="date"
                 className={`${inputClass} mt-1`}
                 value={draftFilters.from}
-                max={draftFilters.to || undefined}
                 onChange={(event) =>
                   setDraftFilters((current) => ({
                     ...current,
@@ -233,7 +232,6 @@ export function AuditLogPage() {
                 type="date"
                 className={`${inputClass} mt-1`}
                 value={draftFilters.to}
-                min={draftFilters.from || undefined}
                 onChange={(event) =>
                   setDraftFilters((current) => ({
                     ...current,
