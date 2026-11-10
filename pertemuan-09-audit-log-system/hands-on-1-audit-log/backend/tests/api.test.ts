@@ -3,6 +3,7 @@ import { once } from 'node:events';
 import type { Server } from 'node:http';
 import { after, before, test } from 'node:test';
 import { app } from '../src/app.ts';
+import { env } from '../src/config/env.ts';
 import { closePool, getPool } from '../src/db/pool.ts';
 
 let server: Server;
@@ -11,6 +12,7 @@ let ownerCookie = '';
 let adminCookie = '';
 let customerCookie = '';
 let ownerId = 0;
+let adminId = 0;
 let ownerStallId = 0;
 let foreignStallId = 0;
 let foreignMenuId = 0;
@@ -22,6 +24,7 @@ let availableMenuPrice = 0;
 let registeredEmail = '';
 const createdMenuIds: number[] = [];
 const createdOrderIds: number[] = [];
+let auditBaselineId = 0;
 
 const OWNER_EMAIL = 'tini@kantin.test';
 const OWNER_PASSWORD = 'rahasia123';
@@ -69,7 +72,9 @@ function readCookie(response: Response): string {
       ? response.headers.getSetCookie()
       : [response.headers.get('set-cookie') ?? ''];
 
-  const cookie = setCookies.find((value) => value.startsWith('kantin_session_ho2='));
+  const cookie = setCookies.find((value) =>
+    value.startsWith(`${env.authCookieName}=`),
+  );
   return cookie ? cookie.split(';')[0] : '';
 }
 
@@ -86,8 +91,57 @@ async function json<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+interface AuditRow {
+  id: number;
+  action: string;
+  targetTable: string;
+  targetId: number;
+  metadata: unknown;
+}
+
+async function readAudit(
+  action: string,
+  targetId: number,
+): Promise<AuditRow | undefined> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input('action', action)
+    .input('targetId', targetId)
+    .query<{
+      id: number;
+      action: string;
+      targetTable: string;
+      targetId: number;
+      metadata: string | null;
+    }>(`
+      SELECT TOP 1 id, action, target_table AS targetTable,
+             target_id AS targetId, metadata
+      FROM dbo.AUDIT_LOGS
+      WHERE action = @action AND target_id = @targetId
+      ORDER BY id DESC
+    `);
+
+  const row = result.recordset[0];
+
+  if (!row) return undefined;
+
+  return {
+    ...row,
+    metadata: row.metadata === null ? null : JSON.parse(row.metadata),
+  };
+}
+
 before(async () => {
   await getPool();
+
+  const baseline = await (
+    await getPool()
+  )
+    .request()
+    .query<{ maxId: number | null }>('SELECT MAX(id) AS maxId FROM dbo.AUDIT_LOGS');
+  auditBaselineId = Number(baseline.recordset[0]?.maxId ?? 0);
+
   server = app.listen(0);
   await once(server, 'listening');
 
@@ -115,6 +169,7 @@ before(async () => {
     'Login admin gagal. Jalankan db/05-demo-accounts.sql.',
   );
   adminCookie = admin.cookie;
+  adminId = admin.id;
 
   const customer = await login(CUSTOMER_EMAIL, CUSTOMER_PASSWORD);
   assert.equal(
@@ -169,6 +224,11 @@ before(async () => {
 
 after(async () => {
   const pool = await getPool();
+
+  await pool
+    .request()
+    .input('baseline', auditBaselineId)
+    .query('DELETE FROM dbo.AUDIT_LOGS WHERE id > @baseline');
 
   for (const orderId of createdOrderIds) {
     await pool.request().input('id', orderId).query('DELETE FROM dbo.ORDER_ITEMS WHERE order_id = @id');
@@ -734,4 +794,176 @@ test('error contract: invalid JSON dan 500 tidak membocorkan stack', async () =>
   assert.equal(serverBody.stack, undefined);
   assert.equal(typeof serverBody.requestId, 'string');
   assert.ok(!serverBody.message.includes('at '));
+});
+
+test('login mencatat audit LOGIN dengan metadata role', async () => {
+  const row = await readAudit('LOGIN', adminId);
+
+  assert.ok(row, 'Audit LOGIN untuk admin tidak ditemukan.');
+  assert.equal(row.targetTable, 'USERS');
+  assert.deepEqual(row.metadata, { role: 'admin' });
+});
+
+test('CRUD menu menulis CREATE, UPDATE, dan DELETE beserta snapshot', async () => {
+  const name = `AUDIT-UJI-${Date.now()}`;
+
+  const created = await request('/api/menu', {
+    method: 'POST',
+    cookie: ownerCookie,
+    body: {
+      stallId: ownerStallId,
+      name,
+      category: 'camilan',
+      price: 7000,
+      description: 'Uji audit',
+      isAvailable: true,
+    },
+  });
+  assert.equal(created.status, 201);
+
+  const createdBody = await json<{ data: { id: number } }>(created);
+  const menuId = createdBody.data.id;
+  createdMenuIds.push(menuId);
+
+  const createRow = await readAudit('CREATE_MENU', menuId);
+  assert.ok(createRow, 'Audit CREATE_MENU tidak ditemukan.');
+  assert.equal(createRow.targetTable, 'MENU_ITEMS');
+
+  const createMeta = createRow.metadata as { after: { name: string } };
+  assert.equal(createMeta.after.name, name);
+
+  const updated = await request(`/api/menu/${menuId}`, {
+    method: 'PUT',
+    cookie: ownerCookie,
+    body: {
+      stallId: ownerStallId,
+      name: `${name}-baru`,
+      category: 'camilan',
+      price: 8000,
+      description: 'Uji audit',
+      isAvailable: false,
+    },
+  });
+  assert.equal(updated.status, 200);
+
+  const updateRow = await readAudit('UPDATE_MENU', menuId);
+  assert.ok(updateRow, 'Audit UPDATE_MENU tidak ditemukan.');
+
+  const updateMeta = updateRow.metadata as {
+    before: { name: string };
+    after: { name: string; price: number };
+    changed: string[];
+  };
+  assert.equal(updateMeta.before.name, name);
+  assert.equal(updateMeta.after.name, `${name}-baru`);
+  assert.equal(updateMeta.after.price, 8000);
+  assert.ok(updateMeta.changed.includes('name'));
+  assert.ok(updateMeta.changed.includes('price'));
+
+  const deleted = await request(`/api/menu/${menuId}`, {
+    method: 'DELETE',
+    cookie: ownerCookie,
+  });
+  assert.equal(deleted.status, 204);
+
+  const index = createdMenuIds.indexOf(menuId);
+  if (index >= 0) createdMenuIds.splice(index, 1);
+
+  const deleteRow = await readAudit('DELETE_MENU', menuId);
+  assert.ok(deleteRow, 'Audit DELETE_MENU tidak ditemukan.');
+
+  const deleteMeta = deleteRow.metadata as { before: { name: string } };
+  assert.equal(deleteMeta.before.name, `${name}-baru`);
+});
+
+test('checkout dan perubahan status menulis audit order', async () => {
+  const checkout = await request('/api/orders', {
+    method: 'POST',
+    cookie: customerCookie,
+    body: {
+      customerName: 'Bagas Pratama',
+      phone: '081234567890',
+      paymentMethod: 'cash',
+      items: [{ menuId: availableMenuId, quantity: 1 }],
+    },
+  });
+  assert.equal(checkout.status, 201);
+
+  const order = await json<{ data: { id: number; orderCode: string } }>(checkout);
+  createdOrderIds.push(order.data.id);
+
+  const createRow = await readAudit('CREATE_ORDER', order.data.id);
+  assert.ok(createRow, 'Audit CREATE_ORDER tidak ditemukan.');
+
+  const createMeta = createRow.metadata as {
+    orderCode: string;
+    itemCount: number;
+  };
+  assert.equal(createMeta.orderCode, order.data.orderCode);
+  assert.equal(createMeta.itemCount, 1);
+
+  const status = await request(`/api/orders/${order.data.id}/status`, {
+    method: 'PATCH',
+    cookie: adminCookie,
+    body: { status: 'completed' },
+  });
+  assert.equal(status.status, 200);
+
+  const updateRow = await readAudit('UPDATE_ORDER_STATUS', order.data.id);
+  assert.ok(updateRow, 'Audit UPDATE_ORDER_STATUS tidak ditemukan.');
+  assert.deepEqual(updateRow.metadata, {
+    orderCode: order.data.orderCode,
+    before: 'confirmed',
+    after: 'completed',
+  });
+});
+
+test('riwayat audit hanya untuk admin', async () => {
+  const admin = await request('/api/audit-logs?pageSize=5', { cookie: adminCookie });
+  assert.equal(admin.status, 200);
+
+  const body = await json<{
+    data: { items: { action: string }[]; pagination: { pageSize: number } };
+  }>(admin);
+  assert.ok(body.data.items.length > 0);
+  assert.equal(body.data.pagination.pageSize, 5);
+
+  for (const cookie of [ownerCookie, customerCookie]) {
+    const forbidden = await request('/api/audit-logs', { cookie });
+    assert.equal(forbidden.status, 403);
+  }
+
+  const anonymous = await request('/api/audit-logs');
+  assert.equal(anonymous.status, 401);
+});
+
+test('filter dan validasi query audit bekerja', async () => {
+  const action = await request('/api/audit-logs?action=LOGIN&pageSize=100', {
+    cookie: adminCookie,
+  });
+  assert.equal(action.status, 200);
+
+  const actionBody = await json<{
+    data: { items: { action: string }[]; pagination: { total: number } };
+  }>(action);
+  assert.ok(actionBody.data.pagination.total > 0);
+  assert.ok(actionBody.data.items.every((item) => item.action === 'LOGIN'));
+
+  const badRange = await request('/api/audit-logs?from=2026-12-31&to=2026-01-01', {
+    cookie: adminCookie,
+  });
+  assert.equal(badRange.status, 400);
+
+  const impossibleDate = await request('/api/audit-logs?from=2026-02-31', {
+    cookie: adminCookie,
+  });
+  assert.equal(impossibleDate.status, 400);
+
+  const badPageSize = await request('/api/audit-logs?pageSize=101', {
+    cookie: adminCookie,
+  });
+  assert.equal(badPageSize.status, 400);
+
+  const unknown = await request('/api/audit-logs?foo=bar', { cookie: adminCookie });
+  assert.equal(unknown.status, 400);
 });

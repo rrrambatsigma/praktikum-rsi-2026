@@ -1,35 +1,27 @@
-# Hands-on Praktikum RSI 2026
+# Starter Praktikum RSI - Pertemuan 09
 
-Repository latihan (_hands-on_) pendamping situs materi **Praktikum Rekayasa Sistem Informasi**, FATISDA UNS. Setiap folder hands-on berisi kode referensi yang lengkap dan bisa langsung dijalankan.
+Titik awal Hands-on Pertemuan 09. Backend audit dan API client sudah lengkap. Satu halaman frontend yang perlu dikerjakan ditandai komentar `TODO`.
 
-👉 [praktikum-rsi.prayudahlah.dev](https://praktikum-rsi.prayudahlah.dev)
+## Isi
 
-## Daftar Hands-on
+```text
+pertemuan-09-audit-log-system/
+├─ db/                                  # skema, index, dan seed audit
+└─ hands-on-1-audit-log/
+   ├─ backend/                          # lengkap
+   └─ frontend/                         # berisi TODO
+```
 
-### Pertemuan 03 — Database, Integrasi Backend & ORM
+## Menjalankan
 
-| Hands-on | Deskripsi |
-| --- | --- |
-| [Hands-on 1 — Setup & Koneksi](pertemuan-03-database-backend-crud/hands-on-1-setup-koneksi) | Setup SQL Server + koneksi backend (driver `mssql`) |
-| [Hands-on 2 — ORM Drizzle](pertemuan-03-database-backend-crud/hands-on-2-orm-drizzle) | CRUD, filter, pagination, join via Drizzle ORM |
+1. Buka SSMS, connect ke `review_kantin`, lalu jalankan `db/01-audit-log-schema.sql` dan `db/02-audit-seed.sql` berurutan dengan F5.
+2. Masuk ke folder backend atau frontend, salin `.env.example` menjadi `.env`, lalu:
 
-### Pertemuan 04 — API Security & Dokumentasi
+```bash
+npm install
+npm run dev
+```
 
-| Hands-on | Deskripsi |
-| --- | --- |
-| [Hands-on 1 — Validasi & Error Handling](pertemuan-04-api-security-dokumentasi/hands-on-1-validasi-error-handling) | Validasi body/query/params dengan zod + error handling terstruktur (terpusat) |
-| [Hands-on 2 — Dokumentasi Swagger/OpenAPI](pertemuan-04-api-security-dokumentasi/hands-on-2-dokumentasi-swagger-openapi) | Spek OpenAPI 3.0 dari schema zod (`zod-to-openapi`) di Swagger UI `/docs` |
+Backend berjalan di `http://localhost:3003`, frontend di `http://localhost:5175`.
 
-## Persyaratan
-
-- Node.js **>= 22.18.0** dan npm
-- SQL Server aktif (default instance `localhost` atau named instance)
-- Tiap hands-on dijalankan dari foldernya sendiri: `npm install` lalu `npm run dev`
-
-## Asisten Praktikum
-
-- **Prayuda Afifan Handoyo - L0224008**
-- **Theodosius Rexy Mahardika - L0224025**
-- **Rambat Ungu Aryati - L0224010**
-- **Trisha Garnis Wahningyun - L0224012**
-
+Panduan lengkap, akun demo, dan alur pengujian ada di [`hands-on-1-audit-log/README.md`](pertemuan-09-audit-log-system/hands-on-1-audit-log/README.md).

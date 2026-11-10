@@ -23,11 +23,28 @@ BEGIN
         target_table NVARCHAR(50) NOT NULL,
         target_id    INT NOT NULL,
         metadata     NVARCHAR(MAX) NULL,
-        created_at   DATETIME2(0) NOT NULL CONSTRAINT DF_AUDIT_LOGS_created_at DEFAULT SYSDATETIME(),
+        created_at   DATETIME2(0) NOT NULL CONSTRAINT DF_AUDIT_LOGS_created_at DEFAULT SYSUTCDATETIME(),
         CONSTRAINT FK_AUDIT_LOGS_USERS FOREIGN KEY (user_id)
             REFERENCES dbo.USERS (id)
     );
 END
+GO
+
+-- Samakan default waktu ke UTC. Waktu lokal ditampilkan oleh frontend.
+-- Baris lama yang sudah tersimpan tetap memakai nilai lamanya.
+IF EXISTS (
+    SELECT 1 FROM sys.default_constraints
+    WHERE name = N'DF_AUDIT_LOGS_created_at'
+      AND parent_object_id = OBJECT_ID(N'dbo.AUDIT_LOGS')
+)
+BEGIN
+    ALTER TABLE dbo.AUDIT_LOGS DROP CONSTRAINT DF_AUDIT_LOGS_created_at;
+END
+GO
+
+ALTER TABLE dbo.AUDIT_LOGS
+    ADD CONSTRAINT DF_AUDIT_LOGS_created_at
+    DEFAULT SYSUTCDATETIME() FOR created_at;
 GO
 
 IF NOT EXISTS (
