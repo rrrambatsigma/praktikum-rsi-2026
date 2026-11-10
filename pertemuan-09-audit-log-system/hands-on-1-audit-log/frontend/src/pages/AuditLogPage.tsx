@@ -22,7 +22,7 @@ import {
 } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 import { useLogout } from '../hooks/useLogout'
-import { errorMessage, getAuditLogs } from '../lib/api'
+import { errorMessage, getAuditLogs, getFieldErrors } from '../lib/api'
 import {
   actionLabel,
   actionTone,
@@ -94,7 +94,13 @@ export function AuditLogPage() {
         setError(null)
       })
       .catch((loadError: unknown) => {
-        if (active) setError(errorMessage(loadError))
+        if (!active) return
+
+        const fieldMessage = Object.values(getFieldErrors(loadError))[0]
+
+        setError(fieldMessage ?? errorMessage(loadError))
+        setLogs([])
+        setPagination(emptyPagination)
       })
       .finally(() => {
         if (!active) return
@@ -264,16 +270,8 @@ export function AuditLogPage() {
               </div>
             </Alert>
           </div>
-        ) : null}
-
-        {isLoading ? (
+        ) : isLoading ? (
           <LoadingPanel message="Memuat riwayat audit..." />
-        ) : logs.length === 0 ? (
-          <EmptyState
-            icon={History}
-            title="Belum ada aktivitas"
-            message="Catatan akan muncul setelah ada login, perubahan menu, atau pesanan yang dibuat."
-          />
         ) : (
           <>
             <div className="mb-5 grid gap-3 sm:grid-cols-3">
@@ -304,6 +302,14 @@ export function AuditLogPage() {
               </Card>
             </div>
 
+            {logs.length === 0 ? (
+              <EmptyState
+                icon={History}
+                title="Belum ada aktivitas"
+                message="Catatan akan muncul setelah ada login, perubahan menu, atau pesanan yang dibuat."
+              />
+            ) : (
+              <>
             <Card className="overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[960px] border-collapse text-left text-sm">
@@ -412,6 +418,8 @@ export function AuditLogPage() {
                 </Button>
               </div>
             </div>
+              </>
+            )}
           </>
         )}
       </main>
