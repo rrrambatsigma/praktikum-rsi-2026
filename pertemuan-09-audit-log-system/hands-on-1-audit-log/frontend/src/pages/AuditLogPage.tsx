@@ -7,7 +7,7 @@ import {
   ScrollText,
   ShieldCheck,
 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppFooter } from '../components/AppFooter'
 import { AppHeader } from '../components/AppHeader'
 import {
@@ -73,34 +73,7 @@ export function AuditLogPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
-
-  const loadLogs = useCallback(
-    async (refreshing = false) => {
-      if (refreshing) setIsRefreshing(true)
-      else setIsLoading(true)
-
-      try {
-        const data = await getAuditLogs({
-          page,
-          pageSize: PAGE_SIZE,
-          action: filters.action || undefined,
-          targetTable: filters.targetTable || undefined,
-          from: filters.from || undefined,
-          to: filters.to || undefined,
-        })
-
-        setLogs(data.items)
-        setPagination(data.pagination)
-        setError(null)
-      } catch (loadError) {
-        setError(errorMessage(loadError))
-      } finally {
-        setIsLoading(false)
-        setIsRefreshing(false)
-      }
-    },
-    [filters, page],
-  )
+  const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -115,6 +88,7 @@ export function AuditLogPage() {
     })
       .then((data) => {
         if (!active) return
+
         setLogs(data.items)
         setPagination(data.pagination)
         setError(null)
@@ -123,13 +97,26 @@ export function AuditLogPage() {
         if (active) setError(errorMessage(loadError))
       })
       .finally(() => {
-        if (active) setIsLoading(false)
+        if (!active) return
+
+        setIsLoading(false)
+        setIsRefreshing(false)
       })
 
     return () => {
       active = false
     }
-  }, [filters, page])
+  }, [filters, page, reloadToken])
+
+  const refresh = () => {
+    setIsRefreshing(true)
+    setReloadToken((token) => token + 1)
+  }
+
+  const retry = () => {
+    setIsLoading(true)
+    setReloadToken((token) => token + 1)
+  }
 
   const applyFilters = () => {
     setIsLoading(true)
@@ -142,17 +129,19 @@ export function AuditLogPage() {
     setDraftFilters(emptyFilters)
     setFilters(emptyFilters)
     setPage(1)
+    setReloadToken((token) => token + 1)
   }
 
   const goToPage = (nextPage: number) => {
     setIsLoading(true)
     setPage(nextPage)
+    setReloadToken((token) => token + 1)
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-page text-text">
       <AppHeader
-        onRefresh={() => void loadLogs(true)}
+        onRefresh={refresh}
         isRefreshing={isRefreshing}
         user={user}
         onLogout={handleLogout}
@@ -270,7 +259,7 @@ export function AuditLogPage() {
             <Alert tone="error" title="Riwayat audit belum bisa dimuat">
               <div className="flex flex-wrap items-center gap-2">
                 <span>{error}</span>
-                <Button variant="secondary" onClick={() => void loadLogs(true)}>
+                <Button variant="secondary" onClick={retry}>
                   <RefreshCw className="size-4" aria-hidden="true" />
                   Coba lagi
                 </Button>

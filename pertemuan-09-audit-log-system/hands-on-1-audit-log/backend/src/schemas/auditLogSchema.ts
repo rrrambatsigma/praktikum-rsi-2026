@@ -5,10 +5,19 @@ const dateOnly = z
   .string()
   .trim()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Gunakan format tanggal YYYY-MM-DD.')
-  .refine(
-    (value) => !Number.isNaN(new Date(`${value}T00:00:00`).getTime()),
-    'Tanggal tidak valid.',
-  );
+  .refine((value) => {
+    const date = new Date(`${value}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) return false;
+
+    const [year, month, day] = value.split('-').map(Number);
+
+    return (
+      date.getFullYear() === year &&
+      date.getMonth() + 1 === month &&
+      date.getDate() === day
+    );
+  }, 'Tanggal tidak valid.');
 
 export const auditLogQuerySchema = z
   .object({

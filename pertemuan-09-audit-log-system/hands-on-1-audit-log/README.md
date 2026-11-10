@@ -45,41 +45,44 @@ Fitur bisnis dari Pertemuan 08 tidak diubah perilakunya. Yang ditambahkan adalah
 - Node.js >= 22.18 dan npm.
 - SQL Server aktif di `localhost:1433`.
 - Database `review_kantin` dari Pertemuan 03.
-- Skema dan seed Pertemuan 08 sudah dijalankan.
-- PowerShell (contoh perintah memakai PowerShell).
+- Skema dan seed Pertemuan 08 sudah dijalankan pada pertemuan sebelumnya.
+- SQL Server Management Studio (SSMS) atau alat query SQL lain.
 
 ## Mulai Cepat
 
-Dari root repository `E:\praktikum-rsi-2026`:
+Buka SQL Server Management Studio (SSMS), lalu connect ke instance SQL Server yang dipakai sejak Pertemuan 03.
 
-```powershell
-# 1. Jalankan skema/seed Pertemuan 08 lebih dulu (jika belum).
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\01-menu-schema.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\02-menu-seed.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\03-auth-seed.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\04-orders-schema.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\05-demo-accounts.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-08-validasi-error-handling\db\06-order-stall-snapshot.sql"
+Jalankan dua script berikut dari folder `db/`, berurutan, dengan F5:
 
-# 2. Skema index audit + akun admin untuk pengujian.
-sqlcmd -S localhost -E -C -b -i "pertemuan-09-audit-log-system\db\01-audit-log-schema.sql"
-sqlcmd -S localhost -E -C -b -i "pertemuan-09-audit-log-system\db\02-audit-seed.sql"
+1. `01-audit-log-schema.sql`: memastikan tabel dan index audit tersedia.
+2. `02-audit-seed.sql`: memperbaiki hash password akun admin.
 
-# 3. Backend (terminal 1)
-cd pertemuan-09-audit-log-system\hands-on-1-audit-log\backend
-Copy-Item .env.example .env
-notepad .env                 # sesuaikan DB_USER, DB_PASSWORD, JWT_SECRET
+Gunakan akun yang punya hak DDL, misalnya `sa`. Kedua script idempoten dan tidak menghapus data.
+
+Backend, dari terminal pertama:
+
+```bash
+cd pertemuan-09-audit-log-system/hands-on-1-audit-log/backend
+cp .env.example .env
+# sesuaikan DB_USER, DB_PASSWORD, dan JWT_SECRET
 npm install
-npm run dev                  # http://localhost:3002
-
-# 4. Frontend (terminal 2)
-cd ..\frontend
-Copy-Item .env.example .env
-npm install
-npm run dev                  # http://localhost:5174
+npm run dev
+# http://localhost:3003
 ```
 
-`dbo.AUDIT_LOGS` sudah dibuat oleh skema Pertemuan 03. Script `01-audit-log-schema.sql` memastikan tabel ada dan menambahkan index yang dibutuhkan halaman riwayat. Script tersebut idempoten dan tidak menghapus data.
+Frontend, dari terminal kedua:
+
+```bash
+cd pertemuan-09-audit-log-system/hands-on-1-audit-log/frontend
+cp .env.example .env
+npm install
+npm run dev
+# http://localhost:5175
+```
+
+Port Pertemuan 09 sengaja dibedakan dari Pertemuan 08 (`3002` dan `5174`) supaya kedua hands-on bisa berjalan bersamaan. Nama cookie juga dibedakan, yaitu `kantin_session_ho3`.
+
+`dbo.AUDIT_LOGS` sudah dibuat oleh skema Pertemuan 03. Script `01-audit-log-schema.sql` memastikan tabel ada, menambahkan index, dan menyamakan default `created_at` ke UTC. Frontend menampilkan waktu tersebut dalam zona waktu browser.
 
 ## Akun Demo
 
@@ -241,11 +244,7 @@ Jika salah satu langkah melempar error, `withTransaction` melakukan rollback. Ti
 
 ## Verifikasi Manual
 
-Jalankan `db/03-audit-samples.sql` untuk melihat isi tabel:
-
-```powershell
-sqlcmd -S localhost -E -C -b -i "pertemuan-09-audit-log-system\db\03-audit-samples.sql"
-```
+Buka SSMS, connect ke `review_kantin`, lalu jalankan isi `db/03-audit-samples.sql`:
 
 Yang perlu terlihat:
 
